@@ -330,100 +330,192 @@ function TerrassendachModel({ config }: TerrassendachModelProps) {
       {/* Seitenteil links (von Innen gesehen) */}
       {sidePanelLeft !== 'none' && (
         <group>
-          {sidePanelLeft === 'wedge-clear' && (
+          {sidePanelLeft === 'wedge-clear' && (() => {
             // Seitenkeil mit Glas (dreieckig, 1 Feld) - links, rechtsbündig
-            <mesh
-              position={[
-                -width * scale - 0.05, // Links von der Überdachung
-                (frontHeight + effectiveBackHeight) / 2 + postSize * 0.6,
-                0,
-              ]}
-              rotation={[0, Math.PI / 2, 0]}
-              castShadow
-              receiveShadow
-            >
-              <boxGeometry args={[0.1, frontHeight - gutterHeight * scale, depth * scale]} />
-              <meshStandardMaterial
-                color="#e8f4f8"
-                transparent
-                opacity={0.15}
-                roughness={0.1}
-                metalness={0.3}
-              />
-            </mesh>
-          )}
-          {sidePanelLeft === 'wall-clear' && (
+            // Von hinten (niedrig) nach vorne (hoch) geneigt
+            // Zwischen den Hauptbalken: unten bei backHeight + postSize * 0.6, oben bei frontHeight + postSize * 0.6
+            const frontBeamTop = frontHeight + postSize * 0.6 // Oberseite hinterer Hauptbalken
+            const backBeamTop = backHeight + postSize * 0.6 // Oberseite vorderer Hauptbalken
+            const verticalDiff = frontBeamTop - backBeamTop // Vertikale Differenz
+            const horizontalDist = depth * scale + (mountType === 'freestanding' ? 0 : 0.15)
+            const diagonalLength = Math.sqrt(verticalDiff * verticalDiff + horizontalDist * horizontalDist) // Diagonale Länge
+            const panelCenterY = (backBeamTop + frontBeamTop) / 2 // Mitte zwischen den Hauptbalken
+            
+            return (
+              <mesh
+                key="wedge-left"
+                position={[
+                  -width * scale - 0.05, // Links von der Überdachung
+                  panelCenterY, // Mitte zwischen den Hauptbalken
+                  mountType === 'freestanding' ? 0 : -0.075, // Zentriert oder angepasst für Wandmontage
+                ]}
+                rotation={[
+                  Math.atan2(
+                    frontHeight - backHeight,
+                    depth * scale + (mountType === 'freestanding' ? 0 : 0.15)
+                  ), // Neigung entsprechend Sparrenwinkel
+                  Math.PI / 2, // 90 Grad um Y-Achse drehen
+                  0,
+                ]}
+                castShadow
+                receiveShadow
+              >
+                <planeGeometry args={[
+                  horizontalDist,
+                  diagonalLength // Diagonale Länge für die geneigte Platte
+                ]} />
+                <meshStandardMaterial
+                  color="#e8f4f8"
+                  transparent
+                  opacity={0.15}
+                  roughness={0.1}
+                  metalness={0.3}
+                  side={2} // DoubleSide
+                />
+              </mesh>
+            )
+          })()}
+          {sidePanelLeft === 'wall-clear' && (() => {
             // Seitenwand mit Glas (vollständig, 3 Felder) - links, rechtsbündig
-            <mesh
-              position={[
-                -width * scale - 0.05, // Links von der Überdachung
-                (frontHeight + effectiveBackHeight) / 2 + postSize * 0.6,
-                0,
-              ]}
-              rotation={[0, Math.PI / 2, 0]}
-              castShadow
-              receiveShadow
-            >
-              <boxGeometry args={[0.1, frontHeight, depth * scale]} />
-              <meshStandardMaterial
-                color="#e8f4f8"
-                transparent
-                opacity={0.15}
-                roughness={0.1}
-                metalness={0.3}
-              />
-            </mesh>
-          )}
+            // Von hinten (niedrig) nach vorne (hoch) geneigt
+            // Zwischen den Hauptbalken: unten bei backHeight + postSize * 0.6, oben bei frontHeight + postSize * 0.6
+            const frontBeamTop = frontHeight + postSize * 0.6 // Oberseite hinterer Hauptbalken
+            const backBeamTop = backHeight + postSize * 0.6 // Oberseite vorderer Hauptbalken
+            const verticalDiff = frontBeamTop - backBeamTop // Vertikale Differenz
+            const horizontalDist = depth * scale + (mountType === 'freestanding' ? 0 : 0.15)
+            const diagonalLength = Math.sqrt(verticalDiff * verticalDiff + horizontalDist * horizontalDist) // Diagonale Länge
+            const panelCenterY = (backBeamTop + frontBeamTop) / 2 // Mitte zwischen den Hauptbalken
+            
+            return (
+              <mesh
+                key="wall-left"
+                position={[
+                  -width * scale - 0.05, // Links von der Überdachung
+                  panelCenterY, // Mitte zwischen den Hauptbalken
+                  mountType === 'freestanding' ? 0 : -0.075, // Zentriert oder angepasst für Wandmontage
+                ]}
+                rotation={[
+                  Math.atan2(
+                    frontHeight - backHeight,
+                    depth * scale + (mountType === 'freestanding' ? 0 : 0.15)
+                  ), // Neigung entsprechend Sparrenwinkel
+                  Math.PI / 2, // 90 Grad um Y-Achse drehen
+                  0,
+                ]}
+                castShadow
+                receiveShadow
+              >
+                <planeGeometry args={[
+                  horizontalDist,
+                  diagonalLength // Diagonale Länge für die geneigte Platte
+                ]} />
+                <meshStandardMaterial
+                  color="#e8f4f8"
+                  transparent
+                  opacity={0.15}
+                  roughness={0.1}
+                  metalness={0.3}
+                  side={2} // DoubleSide
+                />
+              </mesh>
+            )
+          })()}
         </group>
       )}
 
       {/* Seitenteil rechts (von Innen gesehen) */}
       {sidePanelRight !== 'none' && (
         <group>
-          {sidePanelRight === 'wedge-clear' && (
+          {sidePanelRight === 'wedge-clear' && (() => {
             // Seitenkeil mit Glas (dreieckig, 1 Feld) - rechts, rechtsbündig
-            <mesh
-              position={[
-                0.05, // Rechts von der Überdachung (bei x=0)
-                (frontHeight + effectiveBackHeight) / 2 + postSize * 0.6,
-                0,
-              ]}
-              rotation={[0, -Math.PI / 2, 0]}
-              castShadow
-              receiveShadow
-            >
-              <boxGeometry args={[0.1, frontHeight - gutterHeight * scale, depth * scale]} />
-              <meshStandardMaterial
-                color="#e8f4f8"
-                transparent
-                opacity={0.15}
-                roughness={0.1}
-                metalness={0.3}
-              />
-            </mesh>
-          )}
-          {sidePanelRight === 'wall-clear' && (
+            // Von hinten (niedrig) nach vorne (hoch) geneigt
+            // Zwischen den Hauptbalken: unten bei backHeight + postSize * 0.6, oben bei frontHeight + postSize * 0.6
+            const frontBeamTop = frontHeight + postSize * 0.6 // Oberseite hinterer Hauptbalken
+            const backBeamTop = backHeight + postSize * 0.6 // Oberseite vorderer Hauptbalken
+            const verticalDiff = frontBeamTop - backBeamTop // Vertikale Differenz
+            const horizontalDist = depth * scale + (mountType === 'freestanding' ? 0 : 0.15)
+            const diagonalLength = Math.sqrt(verticalDiff * verticalDiff + horizontalDist * horizontalDist) // Diagonale Länge
+            const panelCenterY = (backBeamTop + frontBeamTop) / 2 // Mitte zwischen den Hauptbalken
+            
+            return (
+              <mesh
+                key="wedge-right"
+                position={[
+                  0.05, // Rechts von der Überdachung (bei x=0)
+                  panelCenterY, // Mitte zwischen den Hauptbalken
+                  mountType === 'freestanding' ? 0 : -0.075, // Zentriert oder angepasst für Wandmontage
+                ]}
+                rotation={[
+                  Math.atan2(
+                    frontHeight - backHeight,
+                    depth * scale + (mountType === 'freestanding' ? 0 : 0.15)
+                  ), // Neigung entsprechend Sparrenwinkel
+                  -Math.PI / 2, // -90 Grad um Y-Achse drehen
+                  0,
+                ]}
+                castShadow
+                receiveShadow
+              >
+                <planeGeometry args={[
+                  horizontalDist,
+                  diagonalLength // Diagonale Länge für die geneigte Platte
+                ]} />
+                <meshStandardMaterial
+                  color="#e8f4f8"
+                  transparent
+                  opacity={0.15}
+                  roughness={0.1}
+                  metalness={0.3}
+                  side={2} // DoubleSide
+                />
+              </mesh>
+            )
+          })()}
+          {sidePanelRight === 'wall-clear' && (() => {
             // Seitenwand mit Glas (vollständig, 3 Felder) - rechts, rechtsbündig
-            <mesh
-              position={[
-                0.05, // Rechts von der Überdachung (bei x=0)
-                (frontHeight + effectiveBackHeight) / 2 + postSize * 0.6,
-                0,
-              ]}
-              rotation={[0, -Math.PI / 2, 0]}
-              castShadow
-              receiveShadow
-            >
-              <boxGeometry args={[0.1, frontHeight, depth * scale]} />
-              <meshStandardMaterial
-                color="#e8f4f8"
-                transparent
-                opacity={0.15}
-                roughness={0.1}
-                metalness={0.3}
-              />
-            </mesh>
-          )}
+            // Von hinten (niedrig) nach vorne (hoch) geneigt
+            // Zwischen den Hauptbalken: unten bei backHeight + postSize * 0.6, oben bei frontHeight + postSize * 0.6
+            const frontBeamTop = frontHeight + postSize * 0.6 // Oberseite hinterer Hauptbalken
+            const backBeamTop = backHeight + postSize * 0.6 // Oberseite vorderer Hauptbalken
+            const verticalDiff = frontBeamTop - backBeamTop // Vertikale Differenz
+            const horizontalDist = depth * scale + (mountType === 'freestanding' ? 0 : 0.15)
+            const diagonalLength = Math.sqrt(verticalDiff * verticalDiff + horizontalDist * horizontalDist) // Diagonale Länge
+            const panelCenterY = (backBeamTop + frontBeamTop) / 2 // Mitte zwischen den Hauptbalken
+            
+            return (
+              <mesh
+                key="wall-right"
+                position={[
+                  0.05, // Rechts von der Überdachung (bei x=0)
+                  panelCenterY, // Mitte zwischen den Hauptbalken
+                  mountType === 'freestanding' ? 0 : -0.075, // Zentriert oder angepasst für Wandmontage
+                ]}
+                rotation={[
+                  Math.atan2(
+                    frontHeight - backHeight,
+                    depth * scale + (mountType === 'freestanding' ? 0 : 0.15)
+                  ), // Neigung entsprechend Sparrenwinkel
+                  -Math.PI / 2, // -90 Grad um Y-Achse drehen
+                  0,
+                ]}
+                castShadow
+                receiveShadow
+              >
+                <planeGeometry args={[
+                  horizontalDist,
+                  diagonalLength // Diagonale Länge für die geneigte Platte
+                ]} />
+                <meshStandardMaterial
+                  color="#e8f4f8"
+                  transparent
+                  opacity={0.15}
+                  roughness={0.1}
+                  metalness={0.3}
+                  side={2} // DoubleSide
+                />
+              </mesh>
+            )
+          })()}
         </group>
       )}
     </group>
