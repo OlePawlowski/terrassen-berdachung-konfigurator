@@ -134,9 +134,9 @@ function ConfigPanel({ config, onConfigChange }: ConfigPanelProps) {
               <option value="RAL7016st">RAL 7016st (Anthrazitgrau mit Feinstruktur) - Bestseller</option>
               <option value="RAL9007st">RAL 9007st (Graualuminium mit Feinstruktur)</option>
               <option value="RAL9005st">RAL 9005st (Schwarz mit Feinstruktur)</option>
-              <option value="RAL9010st">RAL 9010st (Reinweiß mit Feinstruktur) - wie Wand</option>
-              <option value="RAL7035st">RAL 7035st (Silbergrau mit Feinstruktur) - #c0c0c0</option>
-              <option value="RAL7024st">RAL 7024st (Mittelgrau mit Feinstruktur) - #545454</option>
+              <option value="RAL9010st">RAL 9010st (Reinweiß mit Feinstruktur)</option>
+              <option value="RAL7035st">RAL 7035st (Silbergrau mit Feinstruktur)</option>
+              <option value="RAL7024st">RAL 7024st (Mittelgrau mit Feinstruktur)</option>
             </select>
           </label>
         </div>

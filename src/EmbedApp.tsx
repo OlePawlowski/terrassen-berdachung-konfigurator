@@ -5,7 +5,7 @@ import TerrassendachModel from './components/TerrassendachModel'
 import Environment from './components/Environment'
 import ConfigPanel from './components/ConfigPanel'
 import { Configuration } from './types'
-import './App.css'
+import './EmbedApp.css'
 
 const defaultConfig: Configuration = {
   frameColor: 'RAL7024st', // Mittelgrau (#545454) als Standard
@@ -22,17 +22,12 @@ const defaultConfig: Configuration = {
   sidePanelRight: 'none',
 }
 
-function App() {
+function EmbedApp() {
   const [config, setConfig] = useState<Configuration>(defaultConfig)
 
   return (
-    <div className="app">
-      <header className="app-header">
-        <h1>Terrassendach Konfigurator</h1>
-        <p>Konfigurieren Sie Ihre individuelle Terrassenüberdachung</p>
-      </header>
-      
-      <div className="app-content">
+    <div className="embed-app">
+      <div className="embed-content">
         <ConfigPanel config={config} onConfigChange={setConfig} />
         
         <div className="visualization-container">
@@ -70,5 +65,5 @@ function App() {
   )
 }
 
-export default App
+export default EmbedApp
 

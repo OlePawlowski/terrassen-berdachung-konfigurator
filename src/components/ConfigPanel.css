@@ -5,6 +5,13 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   padding: 2rem;
   overflow-y: auto;
+  height: 100vh;
+  max-height: 100vh;
+}
+
+/* In der normalen App mit Header: Höhe anpassen */
+.app .config-panel {
+  height: calc(100vh - 200px);
   max-height: calc(100vh - 200px);
 }
 
