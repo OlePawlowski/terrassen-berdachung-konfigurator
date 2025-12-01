@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { Vector3 } from 'three'
+import { Vector3, Shape } from 'three'
 import { Configuration } from '../types'
 
 interface TerrassendachModelProps {
@@ -55,34 +55,38 @@ function TerrassendachModel({ config }: TerrassendachModelProps) {
   // Bei Wandmontage: hintere Pfosten haben backHeight (an der Wand)
   const effectiveBackHeight = backHeight
 
-  // Berechnung der Positionen - rechtsbündig (rechte Kante bei x=0)
+  // Berechnung der Positionen - rechtsbündig (rechte Kante bei x=0), hinten fixiert, nur nach vorne wachsend
+  // Verschiebung nach hinten: zOffset
+  const zOffset = -1.45 // Verschiebung nach hinten
   const postPositions = useMemo(() => {
     const fullWidth = width * scale
-    const halfDepth = (depth * scale) / 2
+    const fullDepth = depth * scale
 
     if (mountType === 'freestanding') {
       // Freistehend: 4 Pfosten an den Ecken - rechtsbündig
       // Vordere Pfosten: frontHeight (höher), Hintere Pfosten: backHeight (niedriger) für Gefälle
+      // Hinten fixiert bei z=zOffset, vorne wachsend bis z=fullDepth+zOffset
       return [
-        // Vordere Pfosten (rechts bei x=0, links bei x=-fullWidth) - höher
-        new Vector3(-fullWidth, frontHeight / 2, halfDepth),
-        new Vector3(0, frontHeight / 2, halfDepth),
-        // Hintere Pfosten - niedriger für Gefälle
-        new Vector3(-fullWidth, backHeight / 2, -halfDepth),
-        new Vector3(0, backHeight / 2, -halfDepth),
+        // Vordere Pfosten (rechts bei x=0, links bei x=-fullWidth) - vorne wachsend
+        new Vector3(-fullWidth, frontHeight / 2, fullDepth + zOffset),
+        new Vector3(0, frontHeight / 2, fullDepth + zOffset),
+        // Hintere Pfosten - hinten fixiert bei z=zOffset, niedriger für Gefälle
+        new Vector3(-fullWidth, backHeight / 2, zOffset),
+        new Vector3(0, backHeight / 2, zOffset),
       ]
     } else {
       // Wandmontage: 2 Pfosten vorne, hinten an der Wand - rechtsbündig
+      // Hinten fixiert bei z=-0.15+zOffset, vorne wachsend bis z=fullDepth+zOffset
       return [
-        // Vordere Pfosten (rechts bei x=0, links bei x=-fullWidth)
-        new Vector3(-fullWidth, frontHeight / 2, halfDepth),
-        new Vector3(0, frontHeight / 2, halfDepth),
-        // Hintere Pfosten (an der Wand) - bündig am Haus
-        new Vector3(-fullWidth, effectiveBackHeight / 2, -halfDepth - 0.15),
-        new Vector3(0, effectiveBackHeight / 2, -halfDepth - 0.15),
+        // Vordere Pfosten (rechts bei x=0, links bei x=-fullWidth) - vorne wachsend
+        new Vector3(-fullWidth, frontHeight / 2, fullDepth + zOffset),
+        new Vector3(0, frontHeight / 2, fullDepth + zOffset),
+        // Hintere Pfosten (an der Wand) - hinten fixiert bei z=-0.15+zOffset, bündig am Haus
+        new Vector3(-fullWidth, effectiveBackHeight / 2, -0.15 + zOffset),
+        new Vector3(0, effectiveBackHeight / 2, -0.15 + zOffset),
       ]
     }
-  }, [width, depth, frontHeight, effectiveBackHeight, scale, mountType])
+  }, [width, depth, frontHeight, effectiveBackHeight, scale, mountType, zOffset])
 
   const postSize = 0.10 // 10cm im Durchmesser - realistischer
 
@@ -98,10 +102,10 @@ function TerrassendachModel({ config }: TerrassendachModelProps) {
       // Vorne: frontHeight (mit Gefälle), Hinten: backHeight
       const frontY = frontHeight + postSize * 0.6 // Oben auf den vorderen Hauptbalken (frontHeight = backHeight + Gefälle)
       const backY = backHeight + postSize * 0.6 // Oben auf den hinteren Hauptbalken (backHeight für Gefälle)
-      const frontZ = (depth * scale) / 2
+      const frontZ = depth * scale + zOffset // Vorne wachsend
       const backZ = mountType === 'freestanding' 
-        ? -(depth * scale) / 2 // Bei freistehend: auf den Pfosten
-        : -(depth * scale) / 2 - 0.15 // Bei Wandmontage: bündig am Haus
+        ? zOffset // Bei freistehend: hinten fixiert bei z=zOffset
+        : -0.15 + zOffset // Bei Wandmontage: hinten fixiert bei z=-0.15+zOffset, bündig am Haus
       
       // Berechnung der Diagonalen für den Sparren
       const rafterLength = Math.sqrt(
@@ -129,12 +133,12 @@ function TerrassendachModel({ config }: TerrassendachModelProps) {
       {/* Wand - nur bei Wandmontage */}
       {mountType === 'wall' && (
         <group>
-          {/* Hauptwand - minimal breiter als die Überdachung, rechtsbündig */}
+          {/* Hauptwand - minimal breiter als die Überdachung, rechtsbündig, hinten fixiert */}
           <mesh
             position={[
               -(width * scale + 0.3) / 2, // Zentriert, aber relativ zur rechten Kante bei x=0
               (effectiveBackHeight + 0.6) / 2, 
-              -(depth * scale) / 2 - 0.15
+              -0.15 + zOffset // Hinten fixiert bei z=-0.15+zOffset, bündig am Haus
             ]}
             receiveShadow
             castShadow
@@ -147,9 +151,9 @@ function TerrassendachModel({ config }: TerrassendachModelProps) {
             />
           </mesh>
           
-          {/* Fenster links - rechtsbündig */}
+          {/* Fenster links - rechtsbündig, hinten fixiert */}
           <mesh
-            position={[-(width * scale + 0.3) / 3, effectiveBackHeight * 0.6, -(depth * scale) / 2 - 0.1]}
+            position={[-(width * scale + 0.3) / 3, effectiveBackHeight * 0.6, -0.1 + zOffset]}
             receiveShadow
           >
             <boxGeometry args={[0.6, 1.2, 0.05]} />
@@ -158,7 +162,7 @@ function TerrassendachModel({ config }: TerrassendachModelProps) {
           
           {/* Fensterrahmen links */}
           <mesh
-            position={[-(width * scale + 0.3) / 3, effectiveBackHeight * 0.6, -(depth * scale) / 2 - 0.08]}
+            position={[-(width * scale + 0.3) / 3, effectiveBackHeight * 0.6, -0.08 + zOffset]}
           >
             <boxGeometry args={[0.65, 1.25, 0.05]} />
             <meshStandardMaterial color="#2c3e50" />
@@ -166,7 +170,7 @@ function TerrassendachModel({ config }: TerrassendachModelProps) {
           
           {/* Tür/Großes Fenster rechts */}
           <mesh
-            position={[-(width * scale + 0.3) / 3 * 2, effectiveBackHeight * 0.5, -(depth * scale) / 2 - 0.1]}
+            position={[-(width * scale + 0.3) / 3 * 2, effectiveBackHeight * 0.5, -0.1 + zOffset]}
             receiveShadow
           >
             <boxGeometry args={[1.2, 1.8, 0.05]} />
@@ -175,7 +179,7 @@ function TerrassendachModel({ config }: TerrassendachModelProps) {
           
           {/* Türrahmen rechts */}
           <mesh
-            position={[-(width * scale + 0.3) / 3 * 2, effectiveBackHeight * 0.5, -(depth * scale) / 2 - 0.08]}
+            position={[-(width * scale + 0.3) / 3 * 2, effectiveBackHeight * 0.5, -0.08 + zOffset]}
           >
             <boxGeometry args={[1.25, 1.85, 0.05]} />
             <meshStandardMaterial color="#1a1a1a" />
@@ -232,7 +236,7 @@ function TerrassendachModel({ config }: TerrassendachModelProps) {
         position={[
           -(width * scale) / 2, // Zentriert, aber relativ zur rechten Kante bei x=0
           backHeight + postSize * 0.6 - (postSize * 1.2) / 2, // Mitte des Balkens, damit Oberseite bei backHeight + postSize * 0.6 liegt
-          (depth * scale) / 2,
+          depth * scale + zOffset, // Vorne wachsend
         ]}
         castShadow
       >
@@ -256,8 +260,8 @@ function TerrassendachModel({ config }: TerrassendachModelProps) {
           -(width * scale) / 2, // Zentriert, aber relativ zur rechten Kante bei x=0
           frontHeight + postSize * 0.6 - (postSize * 1.2) / 2, // Mitte des Balkens, damit Oberseite bei frontHeight + postSize * 0.6 liegt (höher für Winkel)
           mountType === 'freestanding' 
-            ? -(depth * scale) / 2 // Bei freistehend: auf den Pfosten
-            : -(depth * scale) / 2 - 0.15, // Bei Wandmontage: bündig am Haus
+            ? zOffset // Bei freistehend: hinten fixiert bei z=zOffset
+            : -0.15 + zOffset, // Bei Wandmontage: hinten fixiert bei z=-0.15+zOffset, bündig am Haus
         ]}
         castShadow
       >
@@ -301,12 +305,12 @@ function TerrassendachModel({ config }: TerrassendachModelProps) {
         position={[
           -(width * scale) / 2, // Zentriert, aber relativ zur rechten Kante bei x=0
           (frontHeight + backHeight) / 2 + postSize * 1.2, // Auf den Hauptbalken liegen (Balkenhöhe + kleine Überlappung)
-          mountType === 'freestanding' ? 0 : -0.075, // Bei freistehend: zentriert, bei Wandmontage: angepasst für bündige Anbringung
+          (depth * scale) / 2 + zOffset + (mountType === 'freestanding' ? 0 : -0.075), // Mitte zwischen hinten (z=zOffset oder -0.15+zOffset) und vorne (z=depth*scale+zOffset)
         ]}
         rotation={[
           Math.atan2(
             frontHeight - backHeight,
-            depth * scale + (mountType === 'freestanding' ? 0 : 0.15), // Bei freistehend: ohne Versatz
+            depth * scale + (mountType === 'freestanding' ? 0 : 0.15), // Horizontale Distanz von hinten (z=0 oder -0.15) nach vorne (z=depth*scale)
           ) - Math.PI / 2, // 90 Grad nach unten kippen
           0,
           0,
@@ -331,93 +335,226 @@ function TerrassendachModel({ config }: TerrassendachModelProps) {
       {sidePanelLeft !== 'none' && (
         <group>
           {sidePanelLeft === 'wedge-clear' && (() => {
-            // Seitenkeil mit Glas (dreieckig, 1 Feld) - links, rechtsbündig
-            // Von hinten (niedrig) nach vorne (hoch) geneigt
-            // Zwischen den Hauptbalken: unten bei backHeight + postSize * 0.6, oben bei frontHeight + postSize * 0.6
-            const frontBeamTop = frontHeight + postSize * 0.6 // Oberseite hinterer Hauptbalken
-            const backBeamTop = backHeight + postSize * 0.6 // Oberseite vorderer Hauptbalken
-            const verticalDiff = frontBeamTop - backBeamTop // Vertikale Differenz
+            // Seitenkeil mit Glas - angepasst wie die Leisten
             const horizontalDist = depth * scale + (mountType === 'freestanding' ? 0 : 0.15)
-            const diagonalLength = Math.sqrt(verticalDiff * verticalDiff + horizontalDist * horizontalDist) // Diagonale Länge
-            const panelCenterY = (backBeamTop + frontBeamTop) / 2 // Mitte zwischen den Hauptbalken
+            
+            // Höhe der Sparren an den jeweiligen Positionen (vertikale Leisten)
+            const frontRafterY = frontHeight + postSize * 0.6 // Vordere Sparrenhöhe (bei z = depth * scale + zOffset)
+            const backRafterY = backHeight + postSize * 0.6 // Hintere Sparrenhöhe (bei z = zOffset oder -0.15 + zOffset)
+            // Angepasste Höhen: größere niedriger, niedrigere höher
+            const heightDiff = frontRafterY - backRafterY
+            const frontStripHeight = backRafterY + heightDiff * 0.3 // Niedrigere wird höher
+            const backStripHeight = frontRafterY - heightDiff * 0.3 // Größere wird niedriger
+            
+            // Glasscheibe: vertikal wie die Beine, oben schräg abgeschnitten im Sparrenwinkel
+            const glassTopYFront = frontRafterY // Oben vorne: Sparrenhöhe (bei z = depth * scale + zOffset)
+            const glassTopYBack = backRafterY // Oben hinten: Sparrenhöhe (bei z = zOffset oder -0.15 + zOffset)
+            
+            // Trapez-Geometrie: unten rechteckig, oben schräg - genau an Sparrenhöhen anschließend
+            // Von hinten (z=0) nach vorne (z=horizontalDist) wachsend
+            const shape = new Shape()
+            // Unten links (Boden, hinten bei z=0)
+            shape.moveTo(0, 0)
+            // Unten rechts (Boden, vorne bei z=horizontalDist)
+            shape.lineTo(horizontalDist, 0)
+            // Oben rechts (höher, vorne) - genau an vordere Sparrenhöhe
+            shape.lineTo(horizontalDist, glassTopYFront)
+            // Oben links (niedriger, schräg, hinten) - genau an hintere Sparrenhöhe
+            shape.lineTo(0, glassTopYBack)
+            shape.lineTo(0, 0) // Zurück zum Start
             
             return (
-              <mesh
-                key="wedge-left"
-                position={[
-                  -width * scale - 0.05, // Links von der Überdachung
-                  panelCenterY, // Mitte zwischen den Hauptbalken
-                  mountType === 'freestanding' ? 0 : -0.075, // Zentriert oder angepasst für Wandmontage
-                ]}
-                rotation={[
-                  Math.atan2(
-                    frontHeight - backHeight,
-                    depth * scale + (mountType === 'freestanding' ? 0 : 0.15)
-                  ), // Neigung entsprechend Sparrenwinkel
-                  Math.PI / 2, // 90 Grad um Y-Achse drehen
-                  0,
-                ]}
-                castShadow
-                receiveShadow
-              >
-                <planeGeometry args={[
-                  horizontalDist,
-                  diagonalLength // Diagonale Länge für die geneigte Platte
-                ]} />
-                <meshStandardMaterial
-                  color="#e8f4f8"
-                  transparent
-                  opacity={0.15}
-                  roughness={0.1}
-                  metalness={0.3}
-                  side={2} // DoubleSide
-                />
-              </mesh>
+              <group key="wedge-left-group">
+                {/* Glaspanel - vertikal mit schrägem Abschnitt oben, beginnt am Boden */}
+                <mesh
+                  position={[
+                    -width * scale - 0.05, // Links von der Überdachung
+                    0, // Unterseite bei y=0 (Boden)
+                    mountType === 'freestanding' ? zOffset : -0.075 + zOffset, // Hinten fixiert bei z=zOffset oder -0.15+zOffset
+                  ]}
+                  rotation={[
+                    0, // Vertikal bleiben (wie die Beine)
+                    Math.PI / 2, // 90 Grad um Y-Achse drehen
+                    0,
+                  ]}
+                  castShadow
+                  receiveShadow
+                >
+                  <shapeGeometry args={[shape]} />
+                  <meshStandardMaterial
+                    color="#e8f4f8"
+                    transparent
+                    opacity={0.15}
+                    roughness={0.1}
+                    metalness={0.3}
+                    side={2} // DoubleSide
+                  />
+                </mesh>
+                
+                {/* Vertikale Rahmenleisten - nebeneinander, zusammen zentriert */}
+                {/* Erste Leiste - vorne (vertikal, angepasste Höhe) */}
+                <mesh
+                  position={[
+                    -width * scale - 0.05, // Mittig beim Panel
+                    frontStripHeight / 2, // Von oben nach unten
+                    mountType === 'freestanding' 
+                      ? depth * scale + zOffset - (postSize / 2 + 0.85) // Vorne, ganz vorne bei z=depth*scale+zOffset
+                      : depth * scale + zOffset - (postSize / 2 + 0.85) - 0.075, // Bei Wandmontage
+                  ]}
+                  castShadow
+                >
+                  <boxGeometry args={[postSize, frontStripHeight, postSize]} />
+                  <meshStandardMaterial 
+                    color={frameColorHex}
+                    roughness={0.2}
+                    metalness={0.1}
+                    emissive={frameColorHex}
+                    emissiveIntensity={0.1}
+                  />
+                </mesh>
+                
+                {/* Zweite Leiste - hinten (vertikal, angepasste Höhe) */}
+                <mesh
+                  position={[
+                    -width * scale - 0.05, // Mittig beim Panel
+                    backStripHeight / 2, // Von oben nach unten
+                    mountType === 'freestanding' 
+                      ? zOffset + postSize / 2 + 0.85 // Hinten, hinten fixiert bei z=zOffset
+                      : zOffset + postSize / 2 + 0.85 - 0.075, // Bei Wandmontage: hinten fixiert
+                  ]}
+                  castShadow
+                >
+                  <boxGeometry args={[postSize, backStripHeight, postSize]} />
+                  <meshStandardMaterial 
+                    color={frameColorHex}
+                    roughness={0.2}
+                    metalness={0.1}
+                    emissive={frameColorHex}
+                    emissiveIntensity={0.1}
+                  />
+                </mesh>
+              </group>
             )
           })()}
           {sidePanelLeft === 'wall-clear' && (() => {
-            // Seitenwand mit Glas (vollständig, 3 Felder) - links, rechtsbündig
-            // Von hinten (niedrig) nach vorne (hoch) geneigt
-            // Zwischen den Hauptbalken: unten bei backHeight + postSize * 0.6, oben bei frontHeight + postSize * 0.6
-            const frontBeamTop = frontHeight + postSize * 0.6 // Oberseite hinterer Hauptbalken
-            const backBeamTop = backHeight + postSize * 0.6 // Oberseite vorderer Hauptbalken
-            const verticalDiff = frontBeamTop - backBeamTop // Vertikale Differenz
+            // Seitenwand mit Glas - angepasst wie die Leisten
             const horizontalDist = depth * scale + (mountType === 'freestanding' ? 0 : 0.15)
-            const diagonalLength = Math.sqrt(verticalDiff * verticalDiff + horizontalDist * horizontalDist) // Diagonale Länge
-            const panelCenterY = (backBeamTop + frontBeamTop) / 2 // Mitte zwischen den Hauptbalken
+            
+            // Höhe der Sparren an den jeweiligen Positionen (vertikale Leisten)
+            const frontRafterY = frontHeight + postSize * 0.6 // Vordere Sparrenhöhe (bei z = depth * scale + zOffset)
+            const backRafterY = backHeight + postSize * 0.6 // Hintere Sparrenhöhe (bei z = zOffset oder -0.15 + zOffset)
+            // Angepasste Höhen: größere niedriger, niedrigere höher
+            const heightDiff = frontRafterY - backRafterY
+            const frontStripHeight = backRafterY + heightDiff * 0.3 // Niedrigere wird höher
+            const backStripHeight = frontRafterY - heightDiff * 0.3 // Größere wird niedriger
+            
+            // Glasscheibe: von unten (Boden) bis zu den Sparrenhöhen, mit Sparrenwinkel
+            const glassTopYFront = frontRafterY // Oben vorne: Sparrenhöhe
+            const glassTopYBack = backRafterY // Oben hinten: Sparrenhöhe
+            const glassHeight = Math.max(glassTopYFront, glassTopYBack) // Maximale Höhe
+            const glassCenterY = glassHeight / 2 // Mitte der Scheibe
+            // Neigung entsprechend Sparrenwinkel (wie die Sparren)
+            const glassAngle = Math.atan2(
+              frontHeight - backHeight,
+              horizontalDist
+            )
             
             return (
-              <mesh
-                key="wall-left"
-                position={[
-                  -width * scale - 0.05, // Links von der Überdachung
-                  panelCenterY, // Mitte zwischen den Hauptbalken
-                  mountType === 'freestanding' ? 0 : -0.075, // Zentriert oder angepasst für Wandmontage
-                ]}
-                rotation={[
-                  Math.atan2(
-                    frontHeight - backHeight,
-                    depth * scale + (mountType === 'freestanding' ? 0 : 0.15)
-                  ), // Neigung entsprechend Sparrenwinkel
-                  Math.PI / 2, // 90 Grad um Y-Achse drehen
-                  0,
-                ]}
-                castShadow
-                receiveShadow
-              >
-                <planeGeometry args={[
-                  horizontalDist,
-                  diagonalLength // Diagonale Länge für die geneigte Platte
-                ]} />
-                <meshStandardMaterial
-                  color="#e8f4f8"
-                  transparent
-                  opacity={0.15}
-                  roughness={0.1}
-                  metalness={0.3}
-                  side={2} // DoubleSide
-                />
-              </mesh>
+              <group key="wall-left-group">
+                {/* Glaspanel */}
+                <mesh
+                  position={[
+                    -width * scale - 0.05, // Links von der Überdachung
+                    glassCenterY, // Mitte der angepassten Scheibe
+                    mountType === 'freestanding' ? 0 : -0.075, // Zentriert oder angepasst für Wandmontage
+                  ]}
+                  rotation={[
+                    glassAngle, // Neigung entsprechend angepassten Höhen
+                    Math.PI / 2, // 90 Grad um Y-Achse drehen
+                    0,
+                  ]}
+                  castShadow
+                  receiveShadow
+                >
+                  <planeGeometry args={[
+                    horizontalDist,
+                    glassHeight // Höhe der angepassten Scheibe
+                  ]} />
+                  <meshStandardMaterial
+                    color="#e8f4f8"
+                    transparent
+                    opacity={0.15}
+                    roughness={0.1}
+                    metalness={0.3}
+                    side={2} // DoubleSide
+                  />
+                </mesh>
+                
+                {/* Vertikale Rahmenleisten mittig - nebeneinander in Z-Richtung (vorne/hinten) */}
+                {/* Erste Leiste hinten */}
+                <mesh
+                  position={[
+                    -width * scale - 0.05, // Mittig in X-Richtung
+                    backStripHeight / 2, // Von oben nach unten, angepasste Höhe
+                    mountType === 'freestanding' 
+                      ? zOffset - postSize / 2 - 0.02 // Hinten fixiert bei z=zOffset, mit kleiner Lücke
+                      : zOffset - 0.15 - postSize / 2 - 0.02, // Bei Wandmontage: hinten fixiert bei z=-0.15+zOffset
+                  ]}
+                  castShadow
+                >
+                  <boxGeometry args={[postSize, backStripHeight, postSize]} />
+                  <meshStandardMaterial 
+                    color={frameColorHex}
+                    roughness={0.2}
+                    metalness={0.1}
+                    emissive={frameColorHex}
+                    emissiveIntensity={0.1}
+                  />
+                </mesh>
+                
+                {/* Vertikale Rahmenleisten - nebeneinander, zusammen zentriert */}
+                {/* Erste Leiste - vorne (vertikal, angepasste Höhe) */}
+                <mesh
+                  position={[
+                    -width * scale - 0.05, // Mittig beim Panel
+                    frontStripHeight / 2, // Von oben nach unten
+                    mountType === 'freestanding' 
+                      ? depth * scale + zOffset - (postSize / 2 + 0.85) // Vorne, ganz vorne bei z=depth*scale+zOffset
+                      : depth * scale + zOffset - (postSize / 2 + 0.85) - 0.075, // Bei Wandmontage
+                  ]}
+                  castShadow
+                >
+                  <boxGeometry args={[postSize, frontStripHeight, postSize]} />
+                  <meshStandardMaterial 
+                    color={frameColorHex}
+                    roughness={0.2}
+                    metalness={0.1}
+                    emissive={frameColorHex}
+                    emissiveIntensity={0.1}
+                  />
+                </mesh>
+                
+                {/* Zweite Leiste - hinten (vertikal, angepasste Höhe) */}
+                <mesh
+                  position={[
+                    -width * scale - 0.05, // Mittig beim Panel
+                    backStripHeight / 2, // Von oben nach unten
+                    mountType === 'freestanding' 
+                      ? zOffset + postSize / 2 + 0.85 // Hinten, hinten fixiert bei z=zOffset
+                      : zOffset + postSize / 2 + 0.85 - 0.075, // Bei Wandmontage: hinten fixiert
+                  ]}
+                  castShadow
+                >
+                  <boxGeometry args={[postSize, backStripHeight, postSize]} />
+                  <meshStandardMaterial 
+                    color={frameColorHex}
+                    roughness={0.2}
+                    metalness={0.1}
+                    emissive={frameColorHex}
+                    emissiveIntensity={0.1}
+                  />
+                </mesh>
+              </group>
             )
           })()}
         </group>
@@ -427,93 +564,207 @@ function TerrassendachModel({ config }: TerrassendachModelProps) {
       {sidePanelRight !== 'none' && (
         <group>
           {sidePanelRight === 'wedge-clear' && (() => {
-            // Seitenkeil mit Glas (dreieckig, 1 Feld) - rechts, rechtsbündig
-            // Von hinten (niedrig) nach vorne (hoch) geneigt
-            // Zwischen den Hauptbalken: unten bei backHeight + postSize * 0.6, oben bei frontHeight + postSize * 0.6
-            const frontBeamTop = frontHeight + postSize * 0.6 // Oberseite hinterer Hauptbalken
-            const backBeamTop = backHeight + postSize * 0.6 // Oberseite vorderer Hauptbalken
-            const verticalDiff = frontBeamTop - backBeamTop // Vertikale Differenz
+            // Seitenkeil mit Glas - angepasst wie die Leisten
             const horizontalDist = depth * scale + (mountType === 'freestanding' ? 0 : 0.15)
-            const diagonalLength = Math.sqrt(verticalDiff * verticalDiff + horizontalDist * horizontalDist) // Diagonale Länge
-            const panelCenterY = (backBeamTop + frontBeamTop) / 2 // Mitte zwischen den Hauptbalken
+            
+            // Höhe der Sparren an den jeweiligen Positionen (vertikale Leisten)
+            const frontRafterY = frontHeight + postSize * 0.6 // Vordere Sparrenhöhe (bei z = depth * scale + zOffset)
+            const backRafterY = backHeight + postSize * 0.6 // Hintere Sparrenhöhe (bei z = zOffset oder -0.15 + zOffset)
+            // Angepasste Höhen: größere niedriger, niedrigere höher
+            const heightDiff = frontRafterY - backRafterY
+            const frontStripHeight = backRafterY + heightDiff * 0.3 // Niedrigere wird höher
+            const backStripHeight = frontRafterY - heightDiff * 0.3 // Größere wird niedriger
+            
+            // Glasscheibe: vertikal wie die Beine, oben schräg abgeschnitten im Sparrenwinkel
+            const glassTopYFront = frontRafterY // Oben vorne: Sparrenhöhe (bei z = depth * scale + zOffset)
+            const glassTopYBack = backRafterY // Oben hinten: Sparrenhöhe (bei z = zOffset oder -0.15 + zOffset)
+            
+            // Trapez-Geometrie: unten rechteckig, oben schräg - genau an Sparrenhöhen anschließend
+            // Von hinten (z=0) nach vorne (z=horizontalDist) wachsend (Höhen gespiegelt für rechte Seite)
+            const shape = new Shape()
+            // Unten links (Boden, hinten bei z=0)
+            shape.moveTo(0, 0)
+            // Unten rechts (Boden, vorne bei z=horizontalDist)
+            shape.lineTo(horizontalDist, 0)
+            // Oben rechts (höher, vorne) - aber mit hinterer Höhe für rechte Seite
+            shape.lineTo(horizontalDist, glassTopYBack)
+            // Oben links (niedriger, schräg, hinten) - aber mit vorderer Höhe für rechte Seite
+            shape.lineTo(0, glassTopYFront)
+            shape.lineTo(0, 0) // Zurück zum Start
             
             return (
-              <mesh
-                key="wedge-right"
-                position={[
-                  0.05, // Rechts von der Überdachung (bei x=0)
-                  panelCenterY, // Mitte zwischen den Hauptbalken
-                  mountType === 'freestanding' ? 0 : -0.075, // Zentriert oder angepasst für Wandmontage
-                ]}
-                rotation={[
-                  Math.atan2(
-                    frontHeight - backHeight,
-                    depth * scale + (mountType === 'freestanding' ? 0 : 0.15)
-                  ), // Neigung entsprechend Sparrenwinkel
-                  -Math.PI / 2, // -90 Grad um Y-Achse drehen
-                  0,
-                ]}
-                castShadow
-                receiveShadow
-              >
-                <planeGeometry args={[
-                  horizontalDist,
-                  diagonalLength // Diagonale Länge für die geneigte Platte
-                ]} />
-                <meshStandardMaterial
-                  color="#e8f4f8"
-                  transparent
-                  opacity={0.15}
-                  roughness={0.1}
-                  metalness={0.3}
-                  side={2} // DoubleSide
-                />
-              </mesh>
+              <group key="wedge-right-group">
+                {/* Glaspanel - vertikal mit schrägem Abschnitt oben, beginnt am Boden */}
+                <mesh
+                  position={[
+                    0.05, // Rechts von der Überdachung (bei x=0)
+                    0, // Unterseite bei y=0 (Boden)
+                    mountType === 'freestanding' ? zOffset : -0.075 + zOffset, // Hinten fixiert bei z=zOffset oder -0.15+zOffset
+                  ]}
+                  rotation={[
+                    0, // Vertikal bleiben (wie die Beine)
+                    -Math.PI / 2, // -90 Grad um Y-Achse drehen
+                    0,
+                  ]}
+                  castShadow
+                  receiveShadow
+                >
+                  <shapeGeometry args={[shape]} />
+                  <meshStandardMaterial
+                    color="#e8f4f8"
+                    transparent
+                    opacity={0.15}
+                    roughness={0.1}
+                    metalness={0.3}
+                    side={2} // DoubleSide
+                  />
+                </mesh>
+                
+                {/* Vertikale Rahmenleisten - nebeneinander, zusammen zentriert */}
+                {/* Erste Leiste - vorne (vertikal, angepasste Höhe) */}
+                <mesh
+                  position={[
+                    0.05, // Mittig beim Panel
+                    frontStripHeight / 2, // Von oben nach unten
+                    mountType === 'freestanding' 
+                      ? depth * scale + zOffset - (postSize / 2 + 0.85) // Vorne, ganz vorne bei z=depth*scale+zOffset
+                      : depth * scale + zOffset - (postSize / 2 + 0.85) - 0.075, // Bei Wandmontage
+                  ]}
+                  castShadow
+                >
+                  <boxGeometry args={[postSize, frontStripHeight, postSize]} />
+                  <meshStandardMaterial 
+                    color={frameColorHex}
+                    roughness={0.2}
+                    metalness={0.1}
+                    emissive={frameColorHex}
+                    emissiveIntensity={0.1}
+                  />
+                </mesh>
+                
+                {/* Zweite Leiste - hinten (vertikal, angepasste Höhe) */}
+                <mesh
+                  position={[
+                    0.05, // Mittig beim Panel
+                    backStripHeight / 2, // Von oben nach unten
+                    mountType === 'freestanding' 
+                      ? zOffset + postSize / 2 + 0.85 // Hinten, hinten fixiert bei z=zOffset
+                      : zOffset + postSize / 2 + 0.85 - 0.075, // Bei Wandmontage: hinten fixiert
+                  ]}
+                  castShadow
+                >
+                  <boxGeometry args={[postSize, backStripHeight, postSize]} />
+                  <meshStandardMaterial 
+                    color={frameColorHex}
+                    roughness={0.2}
+                    metalness={0.1}
+                    emissive={frameColorHex}
+                    emissiveIntensity={0.1}
+                  />
+                </mesh>
+              </group>
             )
           })()}
           {sidePanelRight === 'wall-clear' && (() => {
-            // Seitenwand mit Glas (vollständig, 3 Felder) - rechts, rechtsbündig
-            // Von hinten (niedrig) nach vorne (hoch) geneigt
-            // Zwischen den Hauptbalken: unten bei backHeight + postSize * 0.6, oben bei frontHeight + postSize * 0.6
-            const frontBeamTop = frontHeight + postSize * 0.6 // Oberseite hinterer Hauptbalken
-            const backBeamTop = backHeight + postSize * 0.6 // Oberseite vorderer Hauptbalken
-            const verticalDiff = frontBeamTop - backBeamTop // Vertikale Differenz
+            // Seitenwand mit Glas - angepasst wie die Leisten
             const horizontalDist = depth * scale + (mountType === 'freestanding' ? 0 : 0.15)
-            const diagonalLength = Math.sqrt(verticalDiff * verticalDiff + horizontalDist * horizontalDist) // Diagonale Länge
-            const panelCenterY = (backBeamTop + frontBeamTop) / 2 // Mitte zwischen den Hauptbalken
+            
+            // Höhe der Sparren an den jeweiligen Positionen (vertikale Leisten)
+            const frontRafterY = frontHeight + postSize * 0.6 // Vordere Sparrenhöhe (bei z = depth * scale + zOffset)
+            const backRafterY = backHeight + postSize * 0.6 // Hintere Sparrenhöhe (bei z = zOffset oder -0.15 + zOffset)
+            // Angepasste Höhen: größere niedriger, niedrigere höher
+            const heightDiff = frontRafterY - backRafterY
+            const frontStripHeight = backRafterY + heightDiff * 0.3 // Niedrigere wird höher
+            const backStripHeight = frontRafterY - heightDiff * 0.3 // Größere wird niedriger
+            
+            // Glasscheibe: vertikal wie die Beine, oben schräg abgeschnitten im Sparrenwinkel
+            const glassTopYFront = frontRafterY // Oben vorne: Sparrenhöhe (bei z = depth * scale + zOffset)
+            const glassTopYBack = backRafterY // Oben hinten: Sparrenhöhe (bei z = zOffset oder -0.15 + zOffset)
+            
+            // Trapez-Geometrie: unten rechteckig, oben schräg - genau an Sparrenhöhen anschließend (wie linke Seite)
+            const shape = new Shape()
+            const halfWidth = horizontalDist / 2
+            // Unten links (Boden)
+            shape.moveTo(-halfWidth, 0)
+            // Unten rechts (Boden)
+            shape.lineTo(halfWidth, 0)
+            // Oben rechts (höher) - genau an vordere Sparrenhöhe
+            shape.lineTo(halfWidth, glassTopYFront)
+            // Oben links (niedriger, schräg) - genau an hintere Sparrenhöhe
+            shape.lineTo(-halfWidth, glassTopYBack)
+            shape.lineTo(-halfWidth, 0) // Zurück zum Start
             
             return (
-              <mesh
-                key="wall-right"
-                position={[
-                  0.05, // Rechts von der Überdachung (bei x=0)
-                  panelCenterY, // Mitte zwischen den Hauptbalken
-                  mountType === 'freestanding' ? 0 : -0.075, // Zentriert oder angepasst für Wandmontage
-                ]}
-                rotation={[
-                  Math.atan2(
-                    frontHeight - backHeight,
-                    depth * scale + (mountType === 'freestanding' ? 0 : 0.15)
-                  ), // Neigung entsprechend Sparrenwinkel
-                  -Math.PI / 2, // -90 Grad um Y-Achse drehen
-                  0,
-                ]}
-                castShadow
-                receiveShadow
-              >
-                <planeGeometry args={[
-                  horizontalDist,
-                  diagonalLength // Diagonale Länge für die geneigte Platte
-                ]} />
-                <meshStandardMaterial
-                  color="#e8f4f8"
-                  transparent
-                  opacity={0.15}
-                  roughness={0.1}
-                  metalness={0.3}
-                  side={2} // DoubleSide
-                />
-              </mesh>
+              <group key="wall-right-group">
+                {/* Glaspanel - vertikal mit schrägem Abschnitt oben, beginnt am Boden */}
+                <mesh
+                  position={[
+                    0.05, // Rechts von der Überdachung (bei x=0)
+                    0, // Unterseite bei y=0 (Boden)
+                    mountType === 'freestanding' ? zOffset : -0.075 + zOffset, // Hinten fixiert bei z=zOffset oder -0.15+zOffset
+                  ]}
+                  rotation={[
+                    0, // Vertikal bleiben (wie die Beine)
+                    -Math.PI / 2, // -90 Grad um Y-Achse drehen
+                    0,
+                  ]}
+                  castShadow
+                  receiveShadow
+                >
+                  <shapeGeometry args={[shape]} />
+                  <meshStandardMaterial
+                    color="#e8f4f8"
+                    transparent
+                    opacity={0.15}
+                    roughness={0.1}
+                    metalness={0.3}
+                    side={2} // DoubleSide
+                  />
+                </mesh>
+                
+                {/* Vertikale Rahmenleisten - nebeneinander, zusammen zentriert */}
+                {/* Erste Leiste - vorne (vertikal, angepasste Höhe) */}
+                <mesh
+                  position={[
+                    0.05, // Mittig beim Panel
+                    frontStripHeight / 2, // Von oben nach unten
+                    mountType === 'freestanding' 
+                      ? depth * scale + zOffset - (postSize / 2 + 0.85) // Vorne, ganz vorne bei z=depth*scale+zOffset
+                      : depth * scale + zOffset - (postSize / 2 + 0.85) - 0.075, // Bei Wandmontage
+                  ]}
+                  castShadow
+                >
+                  <boxGeometry args={[postSize, frontStripHeight, postSize]} />
+                  <meshStandardMaterial 
+                    color={frameColorHex}
+                    roughness={0.2}
+                    metalness={0.1}
+                    emissive={frameColorHex}
+                    emissiveIntensity={0.1}
+                  />
+                </mesh>
+                
+                {/* Zweite Leiste - hinten (vertikal, angepasste Höhe) */}
+                <mesh
+                  position={[
+                    0.05, // Mittig beim Panel
+                    backStripHeight / 2, // Von oben nach unten
+                    mountType === 'freestanding' 
+                      ? zOffset + postSize / 2 + 0.85 // Hinten, hinten fixiert bei z=zOffset
+                      : zOffset + postSize / 2 + 0.85 - 0.075, // Bei Wandmontage: hinten fixiert
+                  ]}
+                  castShadow
+                >
+                  <boxGeometry args={[postSize, backStripHeight, postSize]} />
+                  <meshStandardMaterial 
+                    color={frameColorHex}
+                    roughness={0.2}
+                    metalness={0.1}
+                    emissive={frameColorHex}
+                    emissiveIntensity={0.1}
+                  />
+                </mesh>
+              </group>
             )
           })()}
         </group>

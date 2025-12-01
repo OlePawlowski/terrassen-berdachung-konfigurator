@@ -135,8 +135,8 @@ function Environment({ config, houseModelUrl }: EnvironmentProps) {
         <HouseModel
           modelUrl={houseModelUrl}
           scale={0.0008}
-          position={[-5.0, 0, -(depth * scale) / 2 - 0.5]}
-          rotation={[0, ((-23 + 360) * Math.PI) / 180, 0]}
+          position={[-5.030, 0, -(depth * scale) / 2 - 0.5]}
+          rotation={[0, ((-24 + 360) * Math.PI) / 180, 0]}
         />
       )}
     </group>
