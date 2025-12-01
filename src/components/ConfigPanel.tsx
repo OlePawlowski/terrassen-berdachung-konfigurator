@@ -117,7 +117,8 @@ function ConfigPanel({ config, onConfigChange }: ConfigPanelProps) {
   return (
     <div className="config-panel">
       <div className="config-section">
-        <h2>Konfiguration</h2>
+        <h2>Konfigurator</h2>
+        <p className="config-subtitle">Konfigurieren Sie Ihre individuelle Terrassenüberdachung</p>
         
         {/* 01. Gestellfarbe */}
         <div className="config-group">

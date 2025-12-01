@@ -198,6 +198,10 @@
   transform: translateY(0);
 }
 
+.config-subtitle {
+    padding-bottom: 18px;
+}
+
 @media (max-width: 1200px) {
   .config-panel {
     width: 100%;
