@@ -1,0 +1,24 @@
+{
+  "rewrites": [
+    {
+      "source": "/embed",
+      "destination": "/embed.html"
+    },
+    {
+      "source": "/embed.html",
+      "destination": "/embed.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/embed.html",
+      "headers": [
+        {
+          "key": "X-Frame-Options",
+          "value": "ALLOWALL"
+        }
+      ]
+    }
+  ]
+}
+
