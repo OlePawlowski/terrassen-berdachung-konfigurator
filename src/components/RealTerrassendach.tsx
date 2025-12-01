@@ -59,18 +59,23 @@ function RealTerrassendach({
         const material = child.material as MeshStandardMaterial
         if (material && material.color) {
           // Option 1: Alle Materialien ändern
-          if (MATERIAL_COLORS[config.material]) {
-            material.color.set(MATERIAL_COLORS[config.material])
+          // Konvertiere frameColor zu material key (vereinfachte Zuordnung)
+          const materialKey = config.frameColor === 'RAL7024st' ? 'silver' : 
+                             config.frameColor === 'RAL9005st' ? 'black' :
+                             config.frameColor === 'RAL9010st' ? 'white' :
+                             config.frameColor === 'RAL7016st' ? 'anthracite' : 'silver'
+          if (MATERIAL_COLORS[materialKey]) {
+            material.color.set(MATERIAL_COLORS[materialKey])
           }
           
           // Option 2: Nur bestimmte Materialien ändern (nach Name)
           // if (material.name === 'Frame_Material' || material.name.includes('Frame')) {
-          //   material.color.set(MATERIAL_COLORS[config.material])
+          //   material.color.set(MATERIAL_COLORS[materialKey])
           // }
         }
       }
     })
-  }, [config.material])
+  }, [config.frameColor])
 
   // Optional: Modell-Position basierend auf Konfiguration anpassen
   const position = useMemo(() => {
