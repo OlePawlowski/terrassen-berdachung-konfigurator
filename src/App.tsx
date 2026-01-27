@@ -36,7 +36,7 @@ function App() {
         <ConfigPanel config={config} onConfigChange={setConfig} />
         
         <div className="visualization-container">
-          <Canvas shadows camera={{ position: [6.5, 4.2, 8], fov: 55 }}>
+          <Canvas shadows camera={{ position: [10, 5, 12], fov: 50 }}>
             <ambientLight intensity={0.7} />
             <directionalLight
               position={[5, 10, 5]}
@@ -58,8 +58,8 @@ function App() {
               enablePan={true}
               enableZoom={true}
               enableRotate={true}
-              minDistance={4}
-              maxDistance={25}
+              minDistance={6}
+              maxDistance={30}
               target={[0, 1.2, 0]}
               autoRotate={false}
             />
