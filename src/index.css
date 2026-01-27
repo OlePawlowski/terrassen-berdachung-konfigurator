@@ -18,3 +18,14 @@ body {
   min-height: 100vh;
 }
 
+/* Für Embed-Variante: Kein Scrollen */
+body.embed-mode {
+  overflow: hidden;
+  height: 100vh;
+}
+
+body.embed-mode #root {
+  height: 100vh;
+  overflow: hidden;
+}
+

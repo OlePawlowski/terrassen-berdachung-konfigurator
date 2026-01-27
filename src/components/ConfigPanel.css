@@ -18,10 +18,12 @@
   max-height: calc(100vh - 200px);
 }
 
-/* In der Embed-Variante: Höhe an Container anpassen */
+/* In der Embed-Variante: Höhe an Container anpassen, nur Panel scrollt */
 .embed-app .config-panel {
   height: 100%;
   max-height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .config-section {
