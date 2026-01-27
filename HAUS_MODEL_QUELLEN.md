@@ -216,3 +216,5 @@ Falls das Modell zu groß ist:
 - **Sketchfab:** https://sketchfab.com/
 - **Blender:** https://www.blender.org/ (kostenlos für Optimierung)
 
+
+

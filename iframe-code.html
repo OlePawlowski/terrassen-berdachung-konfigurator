@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iframe-Code für Terrassendach Konfigurator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .code-block {
+            background: #f4f4f4;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+        code {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        h1 {
+            color: #333;
+        }
+        h2 {
+            color: #555;
+            margin-top: 30px;
+        }
+        .note {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 10px;
+            margin: 15px 0;
+        }
+        .preview {
+            border: 2px dashed #ccc;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+            min-height: 600px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Iframe-Code für Terrassendach Konfigurator</h1>
+    
+    <p>Kopieren Sie den folgenden Code und fügen Sie ihn in Ihre Onlineshop-Startseite ein:</p>
+    
+    <div class="code-block">
+        <code>&lt;iframe 
+  src="https://IHR-DOMAIN.de/embed.html" 
+  width="100%" 
+  height="800px" 
+  frameborder="0"
+  style="border: none; min-height: 600px;"
+  allow="fullscreen"
+  title="Terrassendach Konfigurator"
+&gt;&lt;/iframe&gt;</code>
+    </div>
+    
+    <div class="note">
+        <strong>Hinweis:</strong> Ersetzen Sie <code>IHR-DOMAIN.de</code> mit Ihrer tatsächlichen Domain, 
+        auf der der Konfigurator gehostet wird (z.B. <code>terrassendach-konfigurator.vercel.app</code>).
+    </div>
+    
+    <h2>Responsive Variante (empfohlen)</h2>
+    <p>Für eine bessere mobile Ansicht verwenden Sie diese Variante:</p>
+    
+    <div class="code-block">
+        <code>&lt;div style="position: relative; width: 100%; padding-bottom: 75%; height: 0; overflow: hidden;"&gt;
+  &lt;iframe 
+    src="https://IHR-DOMAIN.de/embed.html" 
+    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;"
+    frameborder="0"
+    allow="fullscreen"
+    title="Terrassendach Konfigurator"
+  &gt;&lt;/iframe&gt;
+&lt;/div&gt;</code>
+    </div>
+    
+    <h2>Mit fester Höhe (einfachste Variante)</h2>
+    <p>Wenn Sie eine feste Höhe bevorzugen:</p>
+    
+    <div class="code-block">
+        <code>&lt;iframe 
+  src="https://IHR-DOMAIN.de/embed.html" 
+  width="100%" 
+  height="800px" 
+  frameborder="0"
+  scrolling="no"
+  style="border: none; display: block;"
+  allow="fullscreen"
+  title="Terrassendach Konfigurator"
+&gt;&lt;/iframe&gt;</code>
+    </div>
+    
+    <h2>Beispiel-Vorschau</h2>
+    <p>So sieht der Konfigurator in Ihrer Seite aus:</p>
+    
+    <div class="preview">
+        <iframe 
+            src="/embed.html" 
+            width="100%" 
+            height="600px" 
+            frameborder="0"
+            style="border: none; max-width: 100%;"
+            allow="fullscreen"
+            title="Terrassendach Konfigurator"
+        ></iframe>
+    </div>
+    
+    <h2>Anpassungen</h2>
+    <ul>
+        <li><strong>Höhe ändern:</strong> Passen Sie den Wert <code>height="800px"</code> an Ihre Bedürfnisse an</li>
+        <li><strong>Breite:</strong> <code>width="100%"</code> passt sich automatisch an den Container an</li>
+        <li><strong>CSS-Styling:</strong> Sie können zusätzliche CSS-Klassen oder Styles hinzufügen</li>
+    </ul>
+    
+    <h2>Shop-System spezifische Hinweise</h2>
+    <ul>
+        <li><strong>Shopify:</strong> Fügen Sie den Code in einen "Custom HTML"-Block ein</li>
+        <li><strong>WooCommerce:</strong> Verwenden Sie einen "Custom HTML"-Block oder Shortcode</li>
+        <li><strong>Shopware:</strong> Verwenden Sie einen HTML-Content-Block</li>
+        <li><strong>Magento:</strong> Fügen Sie den Code in einen CMS-Block mit HTML ein</li>
+    </ul>
+</body>
+</html>

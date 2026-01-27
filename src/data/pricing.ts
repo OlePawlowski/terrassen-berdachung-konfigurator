@@ -322,3 +322,5 @@ export const ADDITIONAL_COSTS = {
   customSize: 100.0, // Maßanfertigung Zuschnitte in Breite und Tiefe
 }
 
+
+

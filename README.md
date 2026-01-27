@@ -81,3 +81,5 @@ Neue Materialien können in `src/types.ts` und `src/components/TerrassendachMode
 
 Neue Dachtypen können in `src/types.ts` und den entsprechenden Komponenten hinzugefügt werden.
 
+
+

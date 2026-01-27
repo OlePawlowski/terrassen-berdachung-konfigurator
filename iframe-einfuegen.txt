@@ -1,0 +1,69 @@
+==========================================
+IFRAME-CODE FÜR ONLINESHOP-STARTSEITE
+==========================================
+
+Kopieren Sie einen der folgenden Codes und fügen Sie ihn in Ihre Onlineshop-Startseite ein.
+Ersetzen Sie "IHR-DOMAIN.de" mit Ihrer tatsächlichen Domain!
+
+
+--- VARIANTE 1: Einfach (empfohlen für kleine Section) ---
+
+<iframe 
+  src="https://IHR-DOMAIN.de/embed.html" 
+  width="100%" 
+  height="700px" 
+  frameborder="0"
+  style="border: none; min-height: 600px; display: block;"
+  allow="fullscreen"
+  title="Terrassendach Konfigurator"
+></iframe>
+
+
+--- VARIANTE 2: Responsive (für mobile Geräte) ---
+
+<div style="position: relative; width: 100%; padding-bottom: 75%; height: 0; overflow: hidden;">
+  <iframe 
+    src="https://IHR-DOMAIN.de/embed.html" 
+    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;"
+    frameborder="0"
+    allow="fullscreen"
+    title="Terrassendach Konfigurator"
+  ></iframe>
+</div>
+
+
+--- VARIANTE 3: Mit CSS-Klasse (für eigene Styles) ---
+
+<div class="terrassendach-konfigurator">
+  <iframe 
+    src="https://IHR-DOMAIN.de/embed.html" 
+    width="100%" 
+    height="700px" 
+    frameborder="0"
+    style="border: none; display: block;"
+    allow="fullscreen"
+    title="Terrassendach Konfigurator"
+  ></iframe>
+</div>
+
+<style>
+.terrassendach-konfigurator {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+</style>
+
+
+==========================================
+WICHTIGE HINWEISE:
+==========================================
+
+1. Ersetzen Sie "IHR-DOMAIN.de" mit Ihrer Domain (z.B. terrassendach-konfigurator.vercel.app)
+
+2. Die Höhe können Sie anpassen: height="700px" → z.B. height="800px" oder height="600px"
+   (Empfohlen: 600-800px für eine kleine Section)
+
+3. Für mobile Geräte empfiehlt sich Variante 2 (responsive)
+
+4. Nach dem Einfügen testen Sie die Seite auf verschiedenen Geräten

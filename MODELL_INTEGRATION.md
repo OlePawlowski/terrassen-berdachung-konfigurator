@@ -297,3 +297,5 @@ Bei Problemen:
 3. Skalierung anpassen
 4. Dateipfade überprüfen
 
+
+

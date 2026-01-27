@@ -241,3 +241,5 @@ Nachdem Sie die Daten erhalten haben:
 4. ✅ Konvertierung planen (siehe MODELL_INTEGRATION.md)
 5. ✅ Modell integrieren
 
+
+

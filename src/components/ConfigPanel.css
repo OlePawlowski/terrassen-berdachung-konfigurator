@@ -1,18 +1,27 @@
 .config-panel {
   width: 415px;
+  min-width: 350px;
   background: white;
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  padding: 2rem;
+  padding: 1.5rem;
   overflow-y: auto;
-  height: 100vh;
-  max-height: 100vh;
+  overflow-x: hidden;
+  height: 100%;
+  max-height: 100%;
+  flex-shrink: 0;
 }
 
 /* In der normalen App mit Header: Höhe anpassen */
 .app .config-panel {
   height: calc(100vh - 200px);
   max-height: calc(100vh - 200px);
+}
+
+/* In der Embed-Variante: Höhe an Container anpassen */
+.embed-app .config-panel {
+  height: 100%;
+  max-height: 100%;
 }
 
 .config-section {
@@ -202,10 +211,35 @@
     padding-bottom: 18px;
 }
 
-@media (max-width: 1200px) {
+/* Panel wird bei sehr kleinen Screens schmaler, bleibt aber links */
+@media (max-width: 1400px) {
   .config-panel {
-    width: 100%;
-    max-height: none;
+    width: 380px;
+    min-width: 320px;
+    padding: 1.25rem;
+  }
+}
+
+@media (max-width: 1000px) {
+  .config-panel {
+    width: 350px;
+    min-width: 300px;
+    padding: 1rem;
+  }
+  
+  .config-section h2 {
+    font-size: 1.3rem;
+  }
+  
+  .config-group label {
+    font-size: 0.9rem;
+  }
+  
+  .config-group input[type="number"],
+  .config-group input[type="range"],
+  .config-group select {
+    padding: 0.6rem;
+    font-size: 0.95rem;
   }
 }
 
