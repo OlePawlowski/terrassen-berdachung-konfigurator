@@ -245,3 +245,12 @@
   }
 }
 
+/* Mobile: Sicherstellen dass das Panel scrollbar ist */
+@media (max-width: 768px) {
+  .embed-app .config-panel {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+

@@ -102,16 +102,15 @@
 /* Mobile Geräte: Visualisierung oben, Einstellungen darunter */
 @media (max-width: 768px) {
   .embed-app {
-    overflow-y: auto;
-    overflow-x: hidden;
-    height: auto;
+    overflow: hidden;
+    height: 100vh;
     min-height: 100vh;
   }
   
   .embed-content {
     flex-direction: column;
-    height: auto;
-    overflow: visible;
+    height: 100vh;
+    overflow: hidden;
     padding: 0.5rem;
     gap: 1rem;
   }
@@ -130,10 +129,13 @@
   .embed-app .config-panel {
     width: 100%;
     min-width: 100%;
-    height: auto;
-    max-height: none;
+    height: calc(100vh - 300px - 1rem);
+    max-height: calc(100vh - 300px - 1rem);
+    overflow-y: auto;
+    overflow-x: hidden;
     flex-shrink: 0;
     order: 2;
+    -webkit-overflow-scrolling: touch;
   }
 }
 
