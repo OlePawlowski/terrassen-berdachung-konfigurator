@@ -50,6 +50,15 @@
   width: 100% !important;
   height: 100% !important;
   display: block;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+/* Überschreibe alle inline-Styles die React Three Fiber setzt */
+.visualization-container canvas[style] {
+  width: 100% !important;
+  height: 100% !important;
 }
 
 @media (max-width: 1200px) {

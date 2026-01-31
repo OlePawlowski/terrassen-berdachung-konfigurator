@@ -36,7 +36,17 @@ function App() {
         <ConfigPanel config={config} onConfigChange={setConfig} />
         
         <div className="visualization-container">
-          <Canvas shadows camera={{ position: [8, 4, 10], fov: 50 }}>
+          <Canvas 
+            shadows 
+            camera={{ position: [8, 4, 10], fov: 50 }}
+            gl={{ 
+              preserveDrawingBuffer: true,
+              antialias: true,
+              alpha: false
+            }}
+            dpr={[1, 2]}
+            style={{ width: '100%', height: '100%', display: 'block' }}
+          >
             <ambientLight intensity={0.7} />
             <directionalLight
               position={[5, 10, 5]}
