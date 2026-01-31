@@ -34,6 +34,7 @@
   flex-shrink: 0;
   display: flex;
   position: relative;
+  height: 100%;
 }
 
 .visualization-container canvas {
@@ -49,13 +50,21 @@
 .visualization-container canvas[style] {
   width: 100% !important;
   height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
 }
 
-/* Stelle sicher, dass der Canvas-Container keine feste Höhe hat */
+/* Stelle sicher, dass der Canvas-Container die volle Höhe nutzt */
 .visualization-container > div {
   width: 100% !important;
   height: 100% !important;
   flex: 1;
+  min-height: 100%;
+}
+
+.visualization-container > div > div {
+  width: 100% !important;
+  height: 100% !important;
 }
 
 /* Für sehr kleine Screens: Panel wird schmaler, bleibt aber links */

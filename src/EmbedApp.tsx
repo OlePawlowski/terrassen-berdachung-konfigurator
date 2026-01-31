@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import TerrassendachModel from './components/TerrassendachModel'
@@ -24,13 +24,47 @@ const defaultConfig: Configuration = {
 
 function EmbedApp() {
   const [config, setConfig] = useState<Configuration>(defaultConfig)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const updateCanvasSize = () => {
+      if (containerRef.current) {
+        const canvas = containerRef.current.querySelector('canvas')
+        if (canvas) {
+          const container = containerRef.current
+          const rect = container.getBoundingClientRect()
+          canvas.style.width = `${rect.width}px`
+          canvas.style.height = `${rect.height}px`
+        }
+      }
+    }
+
+    updateCanvasSize()
+    window.addEventListener('resize', updateCanvasSize)
+    
+    // Verwende MutationObserver um auf Änderungen zu reagieren
+    const observer = new MutationObserver(updateCanvasSize)
+    if (containerRef.current) {
+      observer.observe(containerRef.current, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['style']
+      })
+    }
+
+    return () => {
+      window.removeEventListener('resize', updateCanvasSize)
+      observer.disconnect()
+    }
+  }, [])
 
   return (
     <div className="embed-app">
       <div className="embed-content">
         <ConfigPanel config={config} onConfigChange={setConfig} />
         
-        <div className="visualization-container">
+        <div className="visualization-container" ref={containerRef}>
           <Canvas 
             shadows 
             camera={{ position: [8, 4, 10], fov: 50 }}
