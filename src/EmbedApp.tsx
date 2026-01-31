@@ -31,7 +31,12 @@ function EmbedApp() {
         <ConfigPanel config={config} onConfigChange={setConfig} />
         
         <div className="visualization-container">
-          <Canvas shadows camera={{ position: [8, 4, 10], fov: 50 }}>
+          <Canvas 
+            shadows 
+            camera={{ position: [8, 4, 10], fov: 50 }}
+            gl={{ preserveDrawingBuffer: true }}
+            style={{ width: '100%', height: '100%' }}
+          >
             <ambientLight intensity={0.7} />
             <directionalLight
               position={[5, 10, 5]}

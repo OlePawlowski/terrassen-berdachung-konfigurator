@@ -26,8 +26,6 @@
 .visualization-container {
   flex: 1;
   min-width: 0;
-  height: 100%;
-  max-height: 100%;
   min-height: 400px;
   background: white;
   border-radius: 12px;
@@ -42,7 +40,13 @@
   width: 100% !important;
   height: 100% !important;
   display: block;
-  object-fit: contain;
+}
+
+/* Stelle sicher, dass der Canvas-Container keine feste Höhe hat */
+.visualization-container > div {
+  width: 100% !important;
+  height: 100% !important;
+  flex: 1;
 }
 
 /* Für sehr kleine Screens: Panel wird schmaler, bleibt aber links */
