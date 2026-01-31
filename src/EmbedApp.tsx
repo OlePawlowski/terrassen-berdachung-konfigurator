@@ -71,11 +71,12 @@ function EmbedApp() {
             gl={{ 
               preserveDrawingBuffer: true,
               antialias: true,
-              alpha: false
+              alpha: true
             }}
             dpr={[1, 2]}
-            style={{ width: '100%', height: '100%', display: 'block' }}
+            style={{ width: '100%', height: '100%', display: 'block', background: 'white' }}
           >
+            <color attach="background" args={['white']} />
             <ambientLight intensity={0.7} />
             <directionalLight
               position={[5, 10, 5]}

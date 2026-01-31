@@ -111,9 +111,9 @@
   /* Visualisierung zuerst (oben) */
   .visualization-container {
     width: 100%;
-    height: 50vh;
+    height: 300px;
     min-height: 300px;
-    max-height: 50vh;
+    max-height: 300px;
     flex-shrink: 0;
     order: 1;
   }
