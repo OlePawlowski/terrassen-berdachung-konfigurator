@@ -54,6 +54,14 @@
   max-height: none !important;
 }
 
+/* Für mobile Geräte: Feste Höhe von 300px */
+@media (max-width: 768px) {
+  .visualization-container canvas[style] {
+    height: 300px !important;
+    max-height: 300px !important;
+  }
+}
+
 /* Stelle sicher, dass der Canvas-Container die volle Höhe nutzt */
 .visualization-container > div {
   width: 100% !important;
