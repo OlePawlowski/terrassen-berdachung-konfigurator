@@ -43,6 +43,24 @@ export const BASE_PRICES: Record<number, Record<number, number>> = {
   },
 }
 
+// Hilfsfunktionen: Berechnungsmaße aus frei wählbaren Bestellmaßen ableiten
+// Breite wird in vollen Metern (1000 mm) nach oben gerundet,
+// Tiefe in 0,5 m Schritten (500 mm) nach oben gerundet.
+// Damit bleibt jede beliebige Eingabe möglich, die Preisberechnung erfolgt aber in definierten Rastermaßen.
+function getBillingWidth(width: number): number {
+  const minWidth = 3000
+  const maxWidth = 6000
+  const rounded = Math.ceil(width / 1000) * 1000
+  return Math.min(maxWidth, Math.max(minWidth, rounded))
+}
+
+function getBillingDepth(depth: number): number {
+  const minDepth = 2000
+  const maxDepth = 5000
+  const rounded = Math.ceil(depth / 500) * 500
+  return Math.min(maxDepth, Math.max(minDepth, rounded))
+}
+
 // Polycarbonat klar/opal Preise (16mm, 980mm Breite)
 export const POLYCARBONAT_PRICES: Record<number, Record<number, number>> = {
   3000: {
@@ -123,186 +141,22 @@ export const IR_GOLD_SURCHARGES: Record<number, Record<number, number>> = {
   },
 }
 
-/**
- * Interpoliert den Preis für nicht-standard Größen
- */
 export function getBasePrice(width: number, depth: number): number {
-  // Runde auf nächste Standard-Breite
-  const standardWidths = [3000, 4000, 5000, 6000]
-  let lowerWidth = 3000
-  let upperWidth = 6000
-  
-  for (let i = 0; i < standardWidths.length - 1; i++) {
-    if (width >= standardWidths[i] && width <= standardWidths[i + 1]) {
-      lowerWidth = standardWidths[i]
-      upperWidth = standardWidths[i + 1]
-      break
-    }
-  }
-  
-  if (width <= 3000) {
-    lowerWidth = upperWidth = 3000
-  } else if (width >= 6000) {
-    lowerWidth = upperWidth = 6000
-  }
-  
-  // Runde auf nächste Standard-Tiefe
-  const standardDepths = [2000, 2500, 3000, 3500, 4000, 4500, 5000]
-  let lowerDepth = 2000
-  let upperDepth = 5000
-  
-  for (let i = 0; i < standardDepths.length - 1; i++) {
-    if (depth >= standardDepths[i] && depth <= standardDepths[i + 1]) {
-      lowerDepth = standardDepths[i]
-      upperDepth = standardDepths[i + 1]
-      break
-    }
-  }
-  
-  if (depth <= 2000) {
-    lowerDepth = upperDepth = 2000
-  } else if (depth >= 5000) {
-    lowerDepth = upperDepth = 5000
-  }
-  
-  // Wenn exakte Standard-Größe, direkt zurückgeben
-  if (
-    BASE_PRICES[lowerWidth] &&
-    BASE_PRICES[lowerWidth][depth] !== undefined
-  ) {
-    return BASE_PRICES[lowerWidth][depth]
-  }
-  
-  // Interpolation
-  const lowerLower = BASE_PRICES[lowerWidth]?.[lowerDepth] || 0
-  const lowerUpper = BASE_PRICES[lowerWidth]?.[upperDepth] || 0
-  const upperLower = BASE_PRICES[upperWidth]?.[lowerDepth] || 0
-  const upperUpper = BASE_PRICES[upperWidth]?.[upperDepth] || 0
-  
-  // Bilineare Interpolation
-  const widthRatio = (width - lowerWidth) / (upperWidth - lowerWidth || 1)
-  const depthRatio = (depth - lowerDepth) / (upperDepth - lowerDepth || 1)
-  
-  const lower = lowerLower + (lowerUpper - lowerLower) * depthRatio
-  const upper = upperLower + (upperUpper - upperLower) * depthRatio
-  
-  return lower + (upper - lower) * widthRatio
+  const billingWidth = getBillingWidth(width)
+  const billingDepth = getBillingDepth(depth)
+  return BASE_PRICES[billingWidth]?.[billingDepth] ?? 0
 }
 
 export function getPolycarbonatPrice(width: number, depth: number): number {
-  const standardWidths = [3000, 4000, 5000, 6000]
-  let lowerWidth = 3000
-  let upperWidth = 6000
-  
-  for (let i = 0; i < standardWidths.length - 1; i++) {
-    if (width >= standardWidths[i] && width <= standardWidths[i + 1]) {
-      lowerWidth = standardWidths[i]
-      upperWidth = standardWidths[i + 1]
-      break
-    }
-  }
-  
-  if (width <= 3000) {
-    lowerWidth = upperWidth = 3000
-  } else if (width >= 6000) {
-    lowerWidth = upperWidth = 6000
-  }
-  
-  const standardDepths = [2000, 2500, 3000, 3500, 4000, 4500, 5000]
-  let lowerDepth = 2000
-  let upperDepth = 5000
-  
-  for (let i = 0; i < standardDepths.length - 1; i++) {
-    if (depth >= standardDepths[i] && depth <= standardDepths[i + 1]) {
-      lowerDepth = standardDepths[i]
-      upperDepth = standardDepths[i + 1]
-      break
-    }
-  }
-  
-  if (depth <= 2000) {
-    lowerDepth = upperDepth = 2000
-  } else if (depth >= 5000) {
-    lowerDepth = upperDepth = 5000
-  }
-  
-  if (
-    POLYCARBONAT_PRICES[lowerWidth] &&
-    POLYCARBONAT_PRICES[lowerWidth][depth] !== undefined
-  ) {
-    return POLYCARBONAT_PRICES[lowerWidth][depth]
-  }
-  
-  const lowerLower = POLYCARBONAT_PRICES[lowerWidth]?.[lowerDepth] || 0
-  const lowerUpper = POLYCARBONAT_PRICES[lowerWidth]?.[upperDepth] || 0
-  const upperLower = POLYCARBONAT_PRICES[upperWidth]?.[lowerDepth] || 0
-  const upperUpper = POLYCARBONAT_PRICES[upperWidth]?.[upperDepth] || 0
-  
-  const widthRatio = (width - lowerWidth) / (upperWidth - lowerWidth || 1)
-  const depthRatio = (depth - lowerDepth) / (upperDepth - lowerDepth || 1)
-  
-  const lower = lowerLower + (lowerUpper - lowerLower) * depthRatio
-  const upper = upperLower + (upperUpper - upperLower) * depthRatio
-  
-  return lower + (upper - lower) * widthRatio
+  const billingWidth = getBillingWidth(width)
+  const billingDepth = getBillingDepth(depth)
+  return POLYCARBONAT_PRICES[billingWidth]?.[billingDepth] ?? 0
 }
 
 export function getIRGoldSurcharge(width: number, depth: number): number {
-  const standardWidths = [3000, 4000, 5000, 6000]
-  let lowerWidth = 3000
-  let upperWidth = 6000
-  
-  for (let i = 0; i < standardWidths.length - 1; i++) {
-    if (width >= standardWidths[i] && width <= standardWidths[i + 1]) {
-      lowerWidth = standardWidths[i]
-      upperWidth = standardWidths[i + 1]
-      break
-    }
-  }
-  
-  if (width <= 3000) {
-    lowerWidth = upperWidth = 3000
-  } else if (width >= 6000) {
-    lowerWidth = upperWidth = 6000
-  }
-  
-  const standardDepths = [2000, 2500, 3000, 3500, 4000, 4500, 5000]
-  let lowerDepth = 2000
-  let upperDepth = 5000
-  
-  for (let i = 0; i < standardDepths.length - 1; i++) {
-    if (depth >= standardDepths[i] && depth <= standardDepths[i + 1]) {
-      lowerDepth = standardDepths[i]
-      upperDepth = standardDepths[i + 1]
-      break
-    }
-  }
-  
-  if (depth <= 2000) {
-    lowerDepth = upperDepth = 2000
-  } else if (depth >= 5000) {
-    lowerDepth = upperDepth = 5000
-  }
-  
-  if (
-    IR_GOLD_SURCHARGES[lowerWidth] &&
-    IR_GOLD_SURCHARGES[lowerWidth][depth] !== undefined
-  ) {
-    return IR_GOLD_SURCHARGES[lowerWidth][depth]
-  }
-  
-  const lowerLower = IR_GOLD_SURCHARGES[lowerWidth]?.[lowerDepth] || 0
-  const lowerUpper = IR_GOLD_SURCHARGES[lowerWidth]?.[upperDepth] || 0
-  const upperLower = IR_GOLD_SURCHARGES[upperWidth]?.[lowerDepth] || 0
-  const upperUpper = IR_GOLD_SURCHARGES[upperWidth]?.[upperDepth] || 0
-  
-  const widthRatio = (width - lowerWidth) / (upperWidth - lowerWidth || 1)
-  const depthRatio = (depth - lowerDepth) / (upperDepth - lowerDepth || 1)
-  
-  const lower = lowerLower + (lowerUpper - lowerLower) * depthRatio
-  const upper = upperLower + (upperUpper - upperLower) * depthRatio
-  
-  return lower + (upper - lower) * widthRatio
+  const billingWidth = getBillingWidth(width)
+  const billingDepth = getBillingDepth(depth)
+  return IR_GOLD_SURCHARGES[billingWidth]?.[billingDepth] ?? 0
 }
 
 // Zusatzkosten
@@ -322,5 +176,98 @@ export const ADDITIONAL_COSTS = {
   customSize: 100.0, // Maßanfertigung Zuschnitte in Breite und Tiefe
 }
 
+// Aufdach-/Unterdachmarkisen ZIP (Preise laut Tabelle „Aufdachmarkise ZIP“ / „Unterdachmarkise mit ZIP“)
+// Schlüssel: Breite (mm), Wert: Record<Tiefe (mm), Preis in €>
+const ROOF_AWNING_ZIP_PRICES: Record<number, Record<number, number>> = {
+  3000: { 2500: 1602, 3000: 1673, 3500: 1746, 4000: 1834, 4500: 1908, 5000: 1979 },
+  3500: { 2500: 1710, 3000: 1790, 3500: 1873, 4000: 1970, 4500: 2053, 5000: 2133 },
+  4000: { 2500: 1810, 3000: 1900, 3500: 1991, 4000: 2097, 4500: 2189, 5000: 2278 },
+  4500: { 2500: 1902, 3000: 2000, 3500: 2101, 4000: 2216, 4500: 2317, 5000: 2416 },
+  5000: { 2500: 2002, 3000: 2110, 3500: 2220, 4000: 2344, 4500: 2454, 5000: 2595 },
+  5500: { 2500: 2112, 3000: 2229, 3500: 2348, 4000: 2481, 4500: 2600, 5000: 2717 },
+  6000: { 2500: 2229, 3000: 2355, 3500: 2483, 4000: 2626, 4500: 2754, 5000: 2879 },
+}
 
+function getAwningBillingWidth(width: number): number {
+  const minWidth = 3000
+  const maxWidth = 6000
+  const rounded = Math.ceil(width / 500) * 500
+  const clamped = Math.min(maxWidth, Math.max(minWidth, rounded))
+  return (ROOF_AWNING_ZIP_PRICES[clamped] ? clamped : 6000)
+}
 
+function getAwningBillingDepth(depth: number): number {
+  const steps = [2500, 3000, 3500, 4000, 4500, 5000]
+  const minDepth = steps[0]
+  const maxDepth = steps[steps.length - 1]
+  const rounded = Math.ceil(depth / 500) * 500
+  const clamped = Math.min(maxDepth, Math.max(minDepth, rounded))
+  return clamped
+}
+
+export function getRoofAwningZipPrice(width: number, depth: number): number {
+  const billingWidth = getAwningBillingWidth(width)
+  const billingDepth = getAwningBillingDepth(depth)
+  return ROOF_AWNING_ZIP_PRICES[billingWidth]?.[billingDepth] ?? 0
+}
+
+// Vereinfachte Senkrechtmarkise Front:
+// Wir nutzen als Referenz die Reihe Ausfall 2500 mm und Breiten 3000 mm bzw. 5000 mm
+// und interpolieren linear nach Breite. Höhe wird über die Durchgangshöhe angenähert.
+const VERTICAL_AWNING_REF_HEIGHT = 2500
+const VERTICAL_AWNING_REF_WIDTH_MIN = 3000
+const VERTICAL_AWNING_REF_WIDTH_MAX = 5000
+const VERTICAL_AWNING_REF_PRICE_MIN = 1124.29 // 2500 x 3000 mm
+const VERTICAL_AWNING_REF_PRICE_MAX = 1297.14 // 2500 x 5000 mm
+
+export function getVerticalAwningFrontPrice(width: number, gutterHeight: number): number {
+  // Nur sinnvoll, wenn Höhe >= 1800 mm
+  if (gutterHeight < 1800) return 0
+
+  const w = Math.min(
+    VERTICAL_AWNING_REF_WIDTH_MAX,
+    Math.max(VERTICAL_AWNING_REF_WIDTH_MIN, width),
+  )
+  const ratio =
+    (w - VERTICAL_AWNING_REF_WIDTH_MIN) /
+    (VERTICAL_AWNING_REF_WIDTH_MAX - VERTICAL_AWNING_REF_WIDTH_MIN)
+  const price =
+    VERTICAL_AWNING_REF_PRICE_MIN +
+    (VERTICAL_AWNING_REF_PRICE_MAX - VERTICAL_AWNING_REF_PRICE_MIN) * ratio
+
+  return price
+}
+
+// Frontverglasung (Aluminium Frontwand, 44.2 VSG klar, Höhe 2200/2400 mm)
+const FRONT_GLASS_PRICES: Record<number, number> = {
+  1000: 577,
+  2000: 820,
+  3000: 1076,
+  4000: 1332,
+  5000: 1599,
+  6000: 1745,
+  7000: 1965,
+}
+
+export function getFrontGlazingPrice(width: number): number {
+  const steps = Object.keys(FRONT_GLASS_PRICES)
+    .map((v) => parseInt(v, 10))
+    .sort((a, b) => a - b)
+
+  const minWidth = steps[0]
+  const maxWidth = steps[steps.length - 1]
+  const rounded = Math.ceil(width / 1000) * 1000
+  const clamped = Math.min(maxWidth, Math.max(minWidth, rounded))
+  return FRONT_GLASS_PRICES[clamped] ?? 0
+}
+
+// Beleuchtung: einfache Linearisierung anhand Breite
+// Annahme: LED-Paket pro laufendem Meter Rinne
+const LIGHTING_PRICE_PER_METER = 35 // € / m – Schätzwert basierend auf Teilepreisen
+
+export function getLightingPrice(width: number): number {
+  const minMeters = 3
+  const maxMeters = 7
+  const meters = Math.min(maxMeters, Math.max(minMeters, width / 1000))
+  return meters * LIGHTING_PRICE_PER_METER
+}

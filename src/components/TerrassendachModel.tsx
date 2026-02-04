@@ -34,6 +34,10 @@ function TerrassendachModel({ config }: TerrassendachModelProps) {
     roofCovering,
     sidePanelLeft,
     sidePanelRight,
+    roofAwning,
+    verticalAwningFront,
+    frontGlazing,
+    lighting,
   } = config
 
   // Skalierung: mm zu Meter
@@ -63,32 +67,55 @@ function TerrassendachModel({ config }: TerrassendachModelProps) {
     const fullDepth = depth * scale
 
     if (mountType === 'freestanding') {
-      // Freistehend: 4 Pfosten an den Ecken - rechtsbündig
-      // Vordere Pfosten: frontHeight (höher), Hintere Pfosten: backHeight (niedriger) für Gefälle
-      // Hinten fixiert bei z=zOffset, vorne wachsend bis z=fullDepth+zOffset
-      return [
-        // Vordere Pfosten (rechts bei x=0, links bei x=-fullWidth) - vorne wachsend
-        new Vector3(-fullWidth, frontHeight / 2, fullDepth + zOffset),
-        new Vector3(0, frontHeight / 2, fullDepth + zOffset),
-        // Hintere Pfosten - hinten fixiert bei z=zOffset, niedriger für Gefälle
-        new Vector3(-fullWidth, backHeight / 2, zOffset),
-        new Vector3(0, backHeight / 2, zOffset),
-      ]
+      // Freistehend:
+      // Laut Aluxe-Preisliste „Freistehende Konstruktion“:
+      // 3000–5000 mm Breite -> 2 Pfosten pro Seite
+      // 6000–7000 mm Breite -> 3 Pfosten pro Seite
+      const postsPerSide = width <= 5000 ? 2 : 3
+      const xs: number[] = []
+      if (postsPerSide === 2) {
+        xs.push(-fullWidth, 0)
+      } else {
+        // rechtsbündig: 0, mittig, links
+        xs.push(0, -fullWidth / 2, -fullWidth)
+      }
+
+      const positions: Vector3[] = []
+      xs.forEach((x) => {
+        // vordere Pfosten an der höheren Seite (frontHeight)
+        positions.push(new Vector3(x, frontHeight / 2, fullDepth + zOffset))
+        // hintere Pfosten an der niedrigeren Seite (backHeight)
+        positions.push(new Vector3(x, backHeight / 2, zOffset))
+      })
+      return positions
     } else {
-      // Wandmontage: 2 Pfosten vorne, hinten an der Wand - rechtsbündig
-      // Hinten fixiert bei z=-0.15+zOffset, vorne wachsend bis z=fullDepth+zOffset
-      return [
-        // Vordere Pfosten (rechts bei x=0, links bei x=-fullWidth) - vorne wachsend
-        new Vector3(-fullWidth, frontHeight / 2, fullDepth + zOffset),
-        new Vector3(0, frontHeight / 2, fullDepth + zOffset),
-        // Hintere Pfosten (an der Wand) - hinten fixiert bei z=-0.15+zOffset, bündig am Haus
-        new Vector3(-fullWidth, effectiveBackHeight / 2, -0.15 + zOffset),
-        new Vector3(0, effectiveBackHeight / 2, -0.15 + zOffset),
-      ]
+      // Wandmontage:
+      // Laut Orangeline-Tabelle:
+      // 3000–4000 mm Breite -> 2 Pfosten
+      // 5000–6000 mm Breite -> 3 Pfosten
+      const postCountFront = width <= 4000 ? 2 : 3
+      const xs: number[] = []
+      if (postCountFront === 2) {
+        xs.push(-fullWidth, 0)
+      } else {
+        xs.push(0, -fullWidth / 2, -fullWidth)
+      }
+
+      const positions: Vector3[] = []
+      xs.forEach((x) => {
+        // vordere Pfosten
+        positions.push(new Vector3(x, frontHeight / 2, fullDepth + zOffset))
+        // hintere Pfosten an der Wand
+        positions.push(new Vector3(x, effectiveBackHeight / 2, -0.15 + zOffset))
+      })
+      return positions
     }
   }, [width, depth, frontHeight, effectiveBackHeight, scale, mountType, zOffset])
 
   const postSize = 0.10 // 10cm im Durchmesser - realistischer
+
+  // Höhe der vorderen Pfosten / Vorderbalken (Oberkante) – Referenz für Frontverglasung
+  const frontPostsTopGlobal = backHeight + postSize * 0.6
 
   // Berechnung der Sparren - rechtsbündig
   const rafters = useMemo(() => {
@@ -189,11 +216,12 @@ function TerrassendachModel({ config }: TerrassendachModelProps) {
 
       {/* Pfosten - Höhe basierend auf Dachneigung */}
       {postPositions.map((position, index) => {
-        // Bestimme, ob es ein vorderer Pfosten ist
-        const isFrontPost = mountType === 'freestanding' 
-          ? (index === 0 || index === 1) // Bei freistehend: erste beiden sind vorne
-          : (index === 0 || index === 1) // Bei Wandmontage: erste beiden sind vorne
-        
+        // Bestimme, ob es ein vorderer Pfosten ist (an der Rinnenseite)
+        const frontZGlobal = depth * scale + zOffset
+        const backZGlobal = mountType === 'freestanding' ? zOffset : -0.15 + zOffset
+        const isFrontPost =
+          Math.abs(position.z - frontZGlobal) <= Math.abs(position.z - backZGlobal)
+
         // Pfostenhöhe: 
         // Vordere Pfosten: niedrigere Seite (Rinnenseite), müssen den vorderen Hauptbalken unterstützen
         // Die Sparren liegen vorne bei frontHeight + postSize * 0.6
@@ -202,8 +230,8 @@ function TerrassendachModel({ config }: TerrassendachModelProps) {
         // Hintere Pfosten: müssen höher sein, um den Sparrenwinkel zu unterstützen
         // Die Sparren liegen hinten bei backHeight + postSize * 0.6, aber die Pfosten müssen höher sein
         // Die hinteren Pfosten müssen bis zur Oberseite reichen: frontHeight + postSize * 0.6 (höhere Seite für Winkel)
-        const frontRafterTop = frontHeight + postSize * 0.6 // Oberseite der vorderen Sparren
-        const backRafterTop = backHeight + postSize * 0.6 // Oberseite der hinteren Sparren
+        const frontRafterTop = frontHeight + postSize * 0.6 // Oberseite der vorderen Sparren (wandseitig / höhere Seite)
+        const backRafterTop = backHeight + postSize * 0.6 // Oberseite der hinteren Sparren (rinnenseitig / niedrigere Seite)
         const postHeight = isFrontPost ? backRafterTop : frontRafterTop
         const postYPosition = postHeight / 2
         
@@ -275,28 +303,55 @@ function TerrassendachModel({ config }: TerrassendachModelProps) {
         />
       </mesh>
 
-      {/* Sparren (Rafters) */}
+      {/* Sparren (Rafters) + optionale LED-Spots direkt an den geneigten Sparren */}
       {rafters.map((rafter, i) => {
-        // Berechne die Mitte des Sparrens
         const midY = rafter.yPos
         const midZ = rafter.zPos
-        
+
         return (
-          <mesh
+          <group
             key={`rafter-${i}`}
             position={[rafter.xPos, midY, midZ]}
             rotation={[rafter.angle, 0, 0]}
-            castShadow
           >
-            <boxGeometry args={[postSize * 0.7, postSize * 0.9, rafter.length]} />
-            <meshStandardMaterial 
-              color={frameColorHex}
-              roughness={0.2}
-              metalness={0.1}
-              emissive={frameColorHex}
-              emissiveIntensity={0.1}
-            />
-          </mesh>
+            <mesh castShadow>
+              <boxGeometry args={[postSize * 0.7, postSize * 0.9, rafter.length]} />
+              <meshStandardMaterial
+                color={frameColorHex}
+                roughness={0.2}
+                metalness={0.1}
+                emissive={frameColorHex}
+                emissiveIntensity={0.1}
+              />
+            </mesh>
+
+            {lighting === 'led' &&
+              [0.25, 0.5, 0.75].map((t, j) => {
+                const zLocal = -rafter.length / 2 + rafter.length * t
+                const yLocal = -postSize * 0.45
+
+                return (
+                  <group key={`led-${i}-${j}`}>
+                    <mesh position={[0, yLocal, zLocal]}>
+                      <sphereGeometry args={[0.025, 12, 12]} />
+                      <meshStandardMaterial
+                        color="#ffffdd"
+                        emissive="#fff6c2"
+                        emissiveIntensity={2}
+                        roughness={0.1}
+                        metalness={0}
+                      />
+                    </mesh>
+                    <pointLight
+                      position={[0, yLocal - 0.02, zLocal]}
+                      intensity={0.9}
+                      distance={3}
+                      color="#fff9e0"
+                    />
+                  </group>
+                )
+              })}
+          </group>
         )
       })}
 
@@ -330,6 +385,46 @@ function TerrassendachModel({ config }: TerrassendachModelProps) {
           metalness={roofCovering.includes('vsg') || roofCovering === 'polycarbonat-clear' ? 0.3 : 0.1}
         />
       </mesh>
+
+      {/* Dachmarkise (ZIP) – einfache visuelle Darstellung als Tuch über/unter dem Dach */}
+      {roofAwning !== 'none' && (
+        <mesh
+          position={[
+            -(width * scale) / 2,
+            // gleiche Basislage wie die Dacheindeckung, nur leicht nach oben/unten versetzt
+            (frontHeight + backHeight) / 2 +
+              postSize * 1.2 +
+              (roofAwning === 'aufdach-zip' ? 0.03 : -0.03),
+            (depth * scale) / 2 +
+              zOffset +
+              (mountType === 'freestanding' ? 0 : -0.075),
+          ]}
+          rotation={[
+            Math.atan2(
+              frontHeight - backHeight,
+              depth * scale + (mountType === 'freestanding' ? 0 : 0.15),
+            ) - Math.PI / 2,
+            0,
+            0,
+          ]}
+          receiveShadow
+          castShadow
+        >
+          <planeGeometry
+            args={[
+              // identische Abmessungen wie die Dacheindeckung
+              width * scale + postSize * 2,
+              (depth * scale + (mountType === 'freestanding' ? 0 : 0.15)) * 1.05,
+            ]}
+          />
+          <meshStandardMaterial
+            color={roofAwning === 'aufdach-zip' ? '#c8c8c8' : '#b0b0b0'}
+            roughness={0.7}
+            metalness={0.05}
+          />
+        </mesh>
+      )}
+
 
       {/* Seitenteil links (von Innen gesehen) */}
       {sidePanelLeft !== 'none' && (
@@ -768,6 +863,52 @@ function TerrassendachModel({ config }: TerrassendachModelProps) {
             )
           })()}
         </group>
+      )}
+
+      {/* Senkrechtmarkise Front */}
+      {verticalAwningFront === 'zip' && (
+        <mesh
+          position={[
+            -(width * scale) / 2,
+            frontPostsTopGlobal / 2,
+            depth * scale + zOffset + 0.03,
+          ]}
+          castShadow
+          receiveShadow
+        >
+          <planeGeometry args={[width * scale, frontPostsTopGlobal]} />
+          <meshStandardMaterial
+            color="#d4d4d4"
+            transparent
+            opacity={0.9}
+            roughness={0.8}
+            metalness={0.05}
+            side={2}
+          />
+        </mesh>
+      )}
+
+      {/* Frontverglasung */}
+      {frontGlazing === 'aluminium-frontwall' && (
+        <mesh
+          position={[
+            -(width * scale) / 2,
+            frontPostsTopGlobal / 2,
+            depth * scale + zOffset + 0.01,
+          ]}
+          castShadow
+          receiveShadow
+        >
+          <planeGeometry args={[width * scale, frontPostsTopGlobal]} />
+          <meshStandardMaterial
+            color="#e8f4f8"
+            transparent
+            opacity={0.25}
+            roughness={0.1}
+            metalness={0.2}
+            side={2}
+          />
+        </mesh>
       )}
     </group>
   )

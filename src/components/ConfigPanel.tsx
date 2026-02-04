@@ -1,9 +1,13 @@
-import { useMemo } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { Configuration, PriceCalculation } from '../types'
 import {
   getBasePrice,
   getPolycarbonatPrice,
   getIRGoldSurcharge,
+  getRoofAwningZipPrice,
+  getVerticalAwningFrontPrice,
+  getFrontGlazingPrice,
+  getLightingPrice,
   ADDITIONAL_COSTS,
 } from '../data/pricing'
 import './ConfigPanel.css'
@@ -70,11 +74,34 @@ function calculatePrice(config: Configuration): PriceCalculation {
   } else if (config.sidePanelRight === 'wall-clear') {
     sidePanelRightPrice = ADDITIONAL_COSTS.sidePanelWallClear
   }
+
+  // Dachmarkise (Aufdach / Unterdach) – identische Preistabelle
+  const roofAwningPrice =
+    config.roofAwning === 'none'
+      ? 0
+      : getRoofAwningZipPrice(config.width, config.depth)
+
+  // Senkrechtmarkise Front – vereinfachtes Modell nach Breite/Höhe
+  const verticalAwningFrontPrice =
+    config.verticalAwningFront === 'none'
+      ? 0
+      : getVerticalAwningFrontPrice(config.width, config.gutterHeight)
+
+  // Frontverglasung (Aluminium Frontwand)
+  const frontGlazingPrice =
+    config.frontGlazing === 'none'
+      ? 0
+      : getFrontGlazingPrice(config.width)
+
+  // Beleuchtung (LED)
+  const lightingPrice =
+    config.lighting === 'none' ? 0 : getLightingPrice(config.width)
   
   // Maßanfertigung Aufpreis (wenn nicht Standard-Maß)
   const standardWidths = [3000, 4000, 5000, 6000]
   const standardDepths = [2000, 2500, 3000, 3500, 4000, 4500, 5000]
-  const isCustomSize = !standardWidths.includes(config.width) || !standardDepths.includes(config.depth)
+  const isCustomSize =
+    !standardWidths.includes(config.width) || !standardDepths.includes(config.depth)
   const customSizePrice = isCustomSize ? ADDITIONAL_COSTS.customSize : 0
   
   const totalPrice = basePrice + 
@@ -85,6 +112,10 @@ function calculatePrice(config: Configuration): PriceCalculation {
     mountingSetPrice + 
     sidePanelLeftPrice + 
     sidePanelRightPrice +
+    roofAwningPrice +
+    verticalAwningFrontPrice +
+    frontGlazingPrice +
+    lightingPrice +
     customSizePrice
   
   return {
@@ -96,6 +127,10 @@ function calculatePrice(config: Configuration): PriceCalculation {
     mountingSetPrice,
     sidePanelLeftPrice,
     sidePanelRightPrice,
+    roofAwningPrice,
+    verticalAwningFrontPrice,
+    frontGlazingPrice,
+    lightingPrice,
     totalPrice: Math.round(totalPrice * 100) / 100,
   }
 }
@@ -106,6 +141,26 @@ function ConfigPanel({ config, onConfigChange }: ConfigPanelProps) {
   const updateConfig = (updates: Partial<Configuration>) => {
     onConfigChange({ ...config, ...updates })
   }
+
+  // Lokale Eingabe-States für frei eintippbare mm-Werte
+  const [widthInput, setWidthInput] = useState<string>(config.width.toString())
+  const [depthInput, setDepthInput] = useState<string>(config.depth.toString())
+  const [gutterHeightInput, setGutterHeightInput] = useState<string>(
+    config.gutterHeight.toString(),
+  )
+
+  // Wenn sich die Konfiguration von außen ändert, Eingabefelder synchron halten
+  useEffect(() => {
+    setWidthInput(config.width.toString())
+  }, [config.width])
+
+  useEffect(() => {
+    setDepthInput(config.depth.toString())
+  }, [config.depth])
+
+  useEffect(() => {
+    setGutterHeightInput(config.gutterHeight.toString())
+  }, [config.gutterHeight])
   
   // Berechne maximale Tiefe basierend auf Dacheindeckung
   const maxDepth = config.roofCovering === 'vsg-clear' || config.roofCovering === 'vsg-matt' 
@@ -150,15 +205,40 @@ function ConfigPanel({ config, onConfigChange }: ConfigPanelProps) {
               type="number"
               min="1000"
               max="7060"
-              step="10"
-              value={config.width}
+              step="1"
+              value={widthInput}
               onChange={(e) => {
-                const width = parseInt(e.target.value) || 1000
-                updateConfig({ width: Math.max(1000, Math.min(7060, width)) })
+                const val = e.target.value
+                setWidthInput(val)
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  const parsed = parseInt(widthInput, 10)
+                  if (!isNaN(parsed)) {
+                    const clamped = Math.max(1000, Math.min(7060, parsed))
+                    updateConfig({ width: clamped })
+                  }
+                }
+              }}
+              onBlur={() => {
+                const parsed = parseInt(widthInput, 10)
+                if (!isNaN(parsed)) {
+                  const clamped = Math.max(1000, Math.min(7060, parsed))
+                  updateConfig({ width: clamped })
+                  setWidthInput(clamped.toString())
+                } else {
+                  setWidthInput(config.width.toString())
+                }
               }}
             />
           </label>
-          <span className="config-value">{config.width.toLocaleString('de-DE')} mm</span>
+          <span className="config-value">
+            {(config.width / 1000).toLocaleString('de-DE', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}{' '}
+            m
+          </span>
           <span className="config-hint">Standardmaße: 3060, 4060, 5060, 6060 mm</span>
         </div>
 
@@ -169,15 +249,40 @@ function ConfigPanel({ config, onConfigChange }: ConfigPanelProps) {
               type="number"
               min="1000"
               max={maxDepth}
-              step="50"
-              value={config.depth}
+              step="1"
+              value={depthInput}
               onChange={(e) => {
-                const depth = parseInt(e.target.value) || 1000
-                updateConfig({ depth: Math.max(1000, Math.min(maxDepth, depth)) })
+                const val = e.target.value
+                setDepthInput(val)
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  const parsed = parseInt(depthInput, 10)
+                  if (!isNaN(parsed)) {
+                    const clamped = Math.max(1000, Math.min(maxDepth, parsed))
+                    updateConfig({ depth: clamped })
+                  }
+                }
+              }}
+              onBlur={() => {
+                const parsed = parseInt(depthInput, 10)
+                if (!isNaN(parsed)) {
+                  const clamped = Math.max(1000, Math.min(maxDepth, parsed))
+                  updateConfig({ depth: clamped })
+                  setDepthInput(clamped.toString())
+                } else {
+                  setDepthInput(config.depth.toString())
+                }
               }}
             />
           </label>
-          <span className="config-value">{config.depth.toLocaleString('de-DE')} mm</span>
+          <span className="config-value">
+            {(config.depth / 1000).toLocaleString('de-DE', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}{' '}
+            m
+          </span>
           <span className="config-hint">
             Max. {maxDepth} mm mit {config.roofCovering.includes('vsg') ? 'Glas' : 'Polycarbonat'}
           </span>
@@ -191,14 +296,40 @@ function ConfigPanel({ config, onConfigChange }: ConfigPanelProps) {
               type="number"
               min="2000"
               max="3000"
-              step="50"
-              value={config.gutterHeight}
-              onChange={(e) =>
-                updateConfig({ gutterHeight: parseInt(e.target.value) || 2200 })
-              }
+              step="1"
+              value={gutterHeightInput}
+              onChange={(e) => {
+                const val = e.target.value
+                setGutterHeightInput(val)
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  const parsed = parseInt(gutterHeightInput, 10)
+                  if (!isNaN(parsed)) {
+                    const clamped = Math.max(2000, Math.min(3000, parsed))
+                    updateConfig({ gutterHeight: clamped })
+                  }
+                }
+              }}
+              onBlur={() => {
+                const parsed = parseInt(gutterHeightInput, 10)
+                if (!isNaN(parsed)) {
+                  const clamped = Math.max(2000, Math.min(3000, parsed))
+                  updateConfig({ gutterHeight: clamped })
+                  setGutterHeightInput(clamped.toString())
+                } else {
+                  setGutterHeightInput(config.gutterHeight.toString())
+                }
+              }}
             />
           </label>
-          <span className="config-value">{config.gutterHeight.toLocaleString('de-DE')} mm</span>
+          <span className="config-value">
+            {(config.gutterHeight / 1000).toLocaleString('de-DE', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}{' '}
+            m
+          </span>
           <span className="config-hint">Empfehlung: 2200 mm</span>
         </div>
 
@@ -367,6 +498,81 @@ function ConfigPanel({ config, onConfigChange }: ConfigPanelProps) {
             </select>
           </label>
         </div>
+
+        {/* 12. Dachmarkise */}
+        <div className="config-group">
+          <label>
+            12. Dachmarkise (ZIP)
+            <select
+              value={config.roofAwning}
+              onChange={(e) =>
+                updateConfig({
+                  roofAwning: e.target.value as Configuration['roofAwning'],
+                })
+              }
+            >
+              <option value="none">Keine Dachmarkise</option>
+              <option value="aufdach-zip">Aufdachmarkise ZIP (oben auf dem Dach)</option>
+              <option value="unterdach-zip">Unterdachmarkise ZIP (unter dem Dach)</option>
+            </select>
+          </label>
+        </div>
+
+        {/* 13. Senkrechtmarkise Front */}
+        <div className="config-group">
+          <label>
+            13. Senkrechtmarkise Front
+            <select
+              value={config.verticalAwningFront}
+              onChange={(e) =>
+                updateConfig({
+                  verticalAwningFront: e.target.value as Configuration['verticalAwningFront'],
+                })
+              }
+            >
+              <option value="none">Ohne Senkrechtmarkise</option>
+              <option value="zip">Senkrechtmarkise ZIP vorne</option>
+            </select>
+          </label>
+        </div>
+
+        {/* 14. Frontverglasung */}
+        <div className="config-group">
+          <label>
+            14. Frontverglasung
+            <select
+              value={config.frontGlazing}
+              onChange={(e) =>
+                updateConfig({
+                  frontGlazing: e.target.value as Configuration['frontGlazing'],
+                })
+              }
+            >
+              <option value="none">Ohne Frontverglasung</option>
+              <option value="aluminium-frontwall">
+                Aluminium-Frontwand mit 44.2 Glas KLAR (fixe Verglasung vorne)
+              </option>
+            </select>
+          </label>
+        </div>
+
+        {/* 15. Beleuchtung */}
+        <div className="config-group">
+          <label>
+            15. Beleuchtung
+            <select
+              value={config.lighting}
+              onChange={(e) =>
+                updateConfig({
+                  lighting: e.target.value as Configuration['lighting'],
+                })
+              }
+            >
+              <option value="none">Ohne LED-Beleuchtung</option>
+              <option value="led">LED-Beleuchtung in Rinne / Sparren</option>
+            </select>
+          </label>
+        </div>
       </div>
 
       <div className="price-section">
@@ -416,6 +622,30 @@ function ConfigPanel({ config, onConfigChange }: ConfigPanelProps) {
             <div className="price-row">
               <span>Seitenteil rechts:</span>
               <span>+{price.sidePanelRightPrice.toFixed(2)} €</span>
+            </div>
+          )}
+          {price.roofAwningPrice > 0 && (
+            <div className="price-row">
+              <span>Dachmarkise:</span>
+              <span>+{price.roofAwningPrice.toFixed(2)} €</span>
+            </div>
+          )}
+          {price.verticalAwningFrontPrice > 0 && (
+            <div className="price-row">
+              <span>Senkrechtmarkise Front:</span>
+              <span>+{price.verticalAwningFrontPrice.toFixed(2)} €</span>
+            </div>
+          )}
+          {price.frontGlazingPrice > 0 && (
+            <div className="price-row">
+              <span>Frontverglasung:</span>
+              <span>+{price.frontGlazingPrice.toFixed(2)} €</span>
+            </div>
+          )}
+          {price.lightingPrice > 0 && (
+            <div className="price-row">
+              <span>Beleuchtung:</span>
+              <span>+{price.lightingPrice.toFixed(2)} €</span>
             </div>
           )}
           <div className="price-total">

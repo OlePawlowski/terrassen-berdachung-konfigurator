@@ -32,6 +32,18 @@ export interface Configuration {
   
   // 11. Seitenteil rechts
   sidePanelRight: 'none' | 'wedge-clear' | 'wall-clear'
+
+  // 12. Dachmarkise (Beschattung oben/unten)
+  roofAwning: 'none' | 'aufdach-zip' | 'unterdach-zip'
+
+  // 13. Senkrechtmarkise Front
+  verticalAwningFront: 'none' | 'zip'
+
+  // 14. Frontverglasung
+  frontGlazing: 'none' | 'aluminium-frontwall'
+
+  // 15. Beleuchtung
+  lighting: 'none' | 'led'
 }
 
 export interface PriceCalculation {
@@ -43,5 +55,9 @@ export interface PriceCalculation {
   mountingSetPrice: number // Aufpreis für Montageset
   sidePanelLeftPrice: number // Aufpreis für Seitenteil links
   sidePanelRightPrice: number // Aufpreis für Seitenteil rechts
+  roofAwningPrice: number // Aufpreis für Dachmarkise
+  verticalAwningFrontPrice: number // Aufpreis für Senkrechtmarkise Front
+  frontGlazingPrice: number // Aufpreis für Frontverglasung
+  lightingPrice: number // Aufpreis für Beleuchtung
   totalPrice: number // Gesamtpreis
 }

@@ -20,6 +20,10 @@ const defaultConfig: Configuration = {
   roofCovering: 'polycarbonat-clear',
   sidePanelLeft: 'none',
   sidePanelRight: 'none',
+  roofAwning: 'none',
+  verticalAwningFront: 'none',
+  frontGlazing: 'none',
+  lighting: 'none',
 }
 
 function EmbedApp() {
