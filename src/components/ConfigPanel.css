@@ -187,6 +187,46 @@
   border-bottom: none;
 }
 
+@media (max-width: 768px) {
+  /* Preisbereich auf Mobil kompakter und ohne unschöne Zeilenumbrüche darstellen */
+  .price-section {
+    padding: 1rem;
+  }
+
+  .price-details {
+    padding: 0.75rem;
+  }
+
+  .price-row {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.85rem;
+    flex-wrap: nowrap;
+  }
+
+  .price-row span:first-child {
+    flex: 1;
+    white-space: nowrap;
+  }
+
+  .price-row span:last-child {
+    white-space: nowrap;
+    font-weight: 600;
+  }
+
+  .price-total {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+    font-size: 1.05rem;
+  }
+
+  .total-amount {
+    font-size: 1.35rem;
+  }
+}
+
 .cta-button {
   width: 100%;
   padding: 1rem;
