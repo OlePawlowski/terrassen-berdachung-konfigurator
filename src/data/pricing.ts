@@ -213,8 +213,7 @@ export function getRoofAwningZipPrice(width: number, depth: number): number {
 
 // Vereinfachte Senkrechtmarkise Front:
 // Wir nutzen als Referenz die Reihe Ausfall 2500 mm und Breiten 3000 mm bzw. 5000 mm
-// und interpolieren linear nach Breite. Höhe wird über die Durchgangshöhe angenähert.
-const VERTICAL_AWNING_REF_HEIGHT = 2500
+// und interpolieren linear nach Breite.
 const VERTICAL_AWNING_REF_WIDTH_MIN = 3000
 const VERTICAL_AWNING_REF_WIDTH_MAX = 5000
 const VERTICAL_AWNING_REF_PRICE_MIN = 1124.29 // 2500 x 3000 mm
